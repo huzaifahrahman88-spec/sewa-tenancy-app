@@ -1,0 +1,7 @@
+Config.gs
+PRIVATE_NOTES.md
+.clasp.json
+demo-video/
+node_modules/
+.DS_Store
+*.vcf

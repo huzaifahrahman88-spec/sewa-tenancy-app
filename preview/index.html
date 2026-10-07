@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sewa</title>
+<style>
+:root {
+  --bg: #F5F3EF;
+  --card: #FFFFFF;
+  --card-2: #FAF8F5;
+  --ink: #1C1B19;
+  --ink-2: #4A4743;
+  --muted: #7A766F;
+  --line: rgba(28, 27, 25, 0.08);
+  --line-2: rgba(28, 27, 25, 0.14);
+  --accent: #0E6B5C;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E2F0EC;
+  --accent-text: #0B5A4D;
+  --red: #B42318;      --red-soft: #FBE8E6;
+  --amber: #9A5B00;    --amber-soft: #FCEFD6;
+  --green: #217346;    --green-soft: #E4F2E9;
+  --blue: #2856A3;     --blue-soft: #E5ECF8;
+  --grey-soft: #EEECE8;
+  --shadow: 0 1px 2px rgba(28,27,25,.05), 0 4px 16px rgba(28,27,25,.05);
+  --shadow-up: 0 -1px 0 var(--line), 0 -8px 24px rgba(28,27,25,.06);
+  --scrim: rgba(20, 18, 15, 0.38);
+  --radius: 18px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121211;
+    --card: #1D1C1A;
+    --card-2: #242320;
+    --ink: #F3F1EC;
+    --ink-2: #CFCBC3;
+    --muted: #9C978F;
+    --line: rgba(255,255,255,.08);
+    --line-2: rgba(255,255,255,.14);
+    --accent: #3FB8A0;
+    --accent-ink: #08241F;
+    --accent-soft: #163A33;
+    --accent-text: #7FD6C3;
+    --red: #FF8A80;     --red-soft: #3A1E1B;
+    --amber: #F2B75B;   --amber-soft: #382A13;
+    --green: #7BCB95;   --green-soft: #1B3224;
+    --blue: #93B4F0;    --blue-soft: #1C2740;
+    --grey-soft: #2A2926;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-up: 0 -1px 0 var(--line);
+    --scrim: rgba(0,0,0,.55);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); overscroll-behavior: none; }
+body {
+  font: 16px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+a { color: var(--accent-text); text-decoration: none; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- App frame ---------- */
+#app { max-width: 560px; margin: 0 auto; min-height: 100vh; position: relative; }
+.view { display: none; padding: calc(var(--safe-t) + 8px) 16px calc(110px + var(--safe-b)); }
+.view.active { display: block; animation: fade .18s ease-out; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.topbar { display: flex; align-items: flex-end; justify-content: space-between; padding: 14px 2px 14px; gap: 12px; }
+.eyebrow { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: .01em; }
+h1 { font-size: 32px; line-height: 1.1; margin: 2px 0 0; font-weight: 750; letter-spacing: -.02em; }
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--card); box-shadow: var(--shadow); color: var(--ink-2); flex: none;
+}
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn.spin svg { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Summary tiles ---------- */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
+.tile { background: var(--card); border-radius: 16px; padding: 12px 12px 11px; box-shadow: var(--shadow); text-align: left; }
+.tile .v { font-size: 24px; font-weight: 720; letter-spacing: -.02em; }
+.tile .k { font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.25; }
+.tile.hot .v { color: var(--red); }
+
+/* ---------- Sections ---------- */
+.section { margin: 0 0 24px; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 4px 10px; }
+.section-head h2 { font-size: 19px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
+.section-head .sub { font-size: 13px; color: var(--muted); }
+.section-head .link { font-size: 15px; font-weight: 600; color: var(--accent-text); }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- Lease card ---------- */
+.card {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 14px 16px 14px; text-align: left; width: 100%; display: block; position: relative;
+  transition: transform .12s ease;
+}
+.card:active { transform: scale(.985); }
+.card-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.card-title { font-weight: 650; font-size: 17px; letter-spacing: -.01em; line-height: 1.25; }
+.card-title .unit { color: var(--muted); font-weight: 500; }
+.card-people { color: var(--ink-2); font-size: 15px; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card-people .arrow { color: var(--muted); }
+.card-meta { display: flex; gap: 6px 14px; flex-wrap: wrap; color: var(--muted); font-size: 13.5px; margin-top: 8px; }
+.card-meta b { color: var(--ink); font-weight: 600; }
+.card-hint { margin-top: 10px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.card-hint svg { width: 16px; height: 16px; flex: none; }
+.progress { height: 4px; border-radius: 4px; background: var(--grey-soft); margin-top: 12px; overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+
+.pill {
+  flex: none; font-size: 12.5px; font-weight: 650; padding: 4px 9px; border-radius: 999px;
+  white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; line-height: 1.2;
+}
+.pill.red { background: var(--red-soft); color: var(--red); }
+.pill.amber { background: var(--amber-soft); color: var(--amber); }
+.pill.green { background: var(--green-soft); color: var(--green); }
+.pill.blue { background: var(--blue-soft); color: var(--blue); }
+.pill.grey { background: var(--grey-soft); color: var(--muted); }
+.pill.accent { background: var(--accent-soft); color: var(--accent-text); }
+.t-red { color: var(--red); } .t-amber { color: var(--amber); } .t-green { color: var(--green); } .t-blue { color: var(--blue); }
+
+/* compact list row (tenancies tab) */
+.list { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; width: 100%; text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.row:last-child { border-bottom: 0; }
+.row:active { background: var(--card-2); }
+.avatar {
+  width: 40px; height: 40px; border-radius: 12px; flex: none; display: grid; place-items: center;
+  font-weight: 700; font-size: 14px; background: var(--accent-soft); color: var(--accent-text); letter-spacing: -.02em;
+}
+.avatar.sale { background: var(--blue-soft); color: var(--blue); }
+.avatar.dim { background: var(--grey-soft); color: var(--muted); }
+.row .main { flex: 1; min-width: 0; }
+.row .l1 { font-weight: 600; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .l2 { font-size: 13.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.row .side { text-align: right; flex: none; }
+.row .side .amt { font-weight: 600; font-size: 14.5px; }
+.row .side .pill { margin-top: 4px; }
+
+/* ---------- Empty / loading ---------- */
+.empty { text-align: center; padding: 28px 20px; color: var(--muted); background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+.empty .big { font-size: 30px; margin-bottom: 6px; }
+.empty b { color: var(--ink); display: block; font-size: 16px; margin-bottom: 2px; }
+.skeleton { background: var(--card); border-radius: var(--radius); height: 96px; position: relative; overflow: hidden; }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, var(--card-2), transparent);
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+/* ---------- Search & chips ---------- */
+.searchbar {
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+  padding: calc(var(--safe-t) + 6px) 0 10px; margin: 0 -16px; padding-left: 16px; padding-right: 16px;
+}
+.search {
+  display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px;
+  padding: 0 12px; height: 44px; box-shadow: var(--shadow);
+}
+.search svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
+.search input { border: 0; outline: 0; background: none; flex: 1; font-size: 16px; min-width: 0; }
+.search .clear { color: var(--muted); font-size: 14px; padding: 6px; display: none; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; height: 34px; padding: 0 14px; border-radius: 999px; background: var(--card);
+  font-size: 14px; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow); white-space: nowrap;
+}
+.chip .c { color: var(--muted); font-weight: 500; margin-left: 4px; }
+.chip.on { background: var(--ink); color: var(--bg); }
+.chip.on .c { color: var(--bg); opacity: .7; }
+.result-note { font-size: 13px; color: var(--muted); margin: 6px 4px 10px; }
+.more-btn { display: block; width: 100%; padding: 14px; text-align: center; font-weight: 600; color: var(--accent-text); }
+
+/* building insight banner */
+.bldg {
+  background: var(--accent-soft); color: var(--accent-text); border-radius: 16px; padding: 12px 14px;
+  margin-bottom: 12px; font-size: 14px;
+}
+.bldg b { font-size: 16px; display: block; color: var(--ink); margin-bottom: 2px; }
+
+/* ---------- Tab bar ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px);
+  box-shadow: var(--shadow-up);
+  padding-bottom: var(--safe-b);
+}
+.tabbar-inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; height: 62px; }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--muted); padding-bottom: 8px; }
+.tab svg { width: 25px; height: 25px; }
+.tab.on { color: var(--accent-text); }
+.tab-add { display: grid; place-items: center; padding-bottom: 10px; }
+.tab-add span {
+  width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; box-shadow: 0 6px 18px rgba(14,107,92,.35); transform: translateY(-10px);
+}
+.tab-add svg { width: 26px; height: 26px; }
+
+/* ---------- Bottom sheet ---------- */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 560px; margin: 0 auto;
+  background: var(--bg); border-radius: 22px 22px 0 0; max-height: 94vh; display: flex; flex-direction: column;
+  transform: translateY(105%); transition: transform .32s cubic-bezier(.2,.8,.2,1);
+}
+.sheet.on { transform: none; }
+.sheet.dragging { transition: none; }
+.scrim.dragging { transition: none; }
+.sheet-grab { width: 38px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 8px auto 2px; flex: none; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 10px; flex: none; }
+.sheet-head h3 { margin: 0; font-size: 17px; font-weight: 700; text-align: center; flex: 1; }
+.sheet-head .side-btn { min-width: 64px; font-size: 16px; color: var(--accent-text); font-weight: 500; text-align: left; }
+.sheet-head .side-btn.right { text-align: right; font-weight: 700; }
+.sheet-head .side-btn:disabled { opacity: .4; }
+.sheet-body { overscroll-behavior: contain; overflow-y: auto; padding: 4px 16px calc(24px + var(--safe-b)); -webkit-overflow-scrolling: touch; }
+
+/* detail */
+.hero { text-align: center; padding: 6px 8px 18px; }
+.hero .title { font-size: 24px; font-weight: 750; letter-spacing: -.02em; line-height: 1.2; }
+.hero .sub { color: var(--muted); margin-top: 4px; font-size: 15px; }
+.hero .pill { margin-top: 10px; font-size: 13px; padding: 5px 11px; }
+.countdown { font-size: 44px; font-weight: 780; letter-spacing: -.03em; line-height: 1; margin-top: 14px; }
+.countdown small { font-size: 15px; font-weight: 600; color: var(--muted); letter-spacing: 0; margin-left: 4px; }
+
+.timeline { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 16px 14px; margin-bottom: 14px; }
+.tl-track { position: relative; height: 6px; border-radius: 6px; background: var(--grey-soft); margin: 10px 4px 0; }
+.tl-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--accent); }
+.tl-dot { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--card); border: 3px solid var(--grey-soft); }
+.tl-dot.notice { border-color: var(--amber); }
+.tl-dot.today { border-color: var(--accent); width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+.tl-labels { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+.tl-labels b { display: block; color: var(--ink); font-size: 14px; font-weight: 600; }
+.tl-labels > div:last-child { text-align: right; }
+.tl-notice { position: relative; height: 34px; margin: 8px 4px 0; font-size: 12.5px; }
+.tl-notice > div { position: absolute; top: 0; transform: translateX(-50%); text-align: center; white-space: nowrap; color: var(--amber); }
+.tl-notice b { display: block; color: var(--ink); font-size: 14px; font-weight: 600; }
+
+.group { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden; }
+.group-label { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin: 18px 6px 8px; }
+.kv { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); min-height: 50px; }
+.kv:last-child { border-bottom: 0; }
+.kv .k { color: var(--muted); font-size: 15px; flex: none; width: 96px; }
+.kv .v { flex: 1; font-size: 15.5px; min-width: 0; word-break: break-word; }
+.kv .acts { display: flex; gap: 8px; flex: none; }
+.round {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-text);
+}
+.round svg { width: 18px; height: 18px; }
+.round.wa { background: #E3F5E8; color: #1E8E4A; }
+@media (prefers-color-scheme: dark) { .round.wa { background: #173323; color: #6FD496; } }
+.toggle-row { justify-content: space-between; }
+.switch { position: relative; width: 51px; height: 31px; flex: none; }
+.switch input { opacity: 0; position: absolute; inset: 0; margin: 0; cursor: pointer; z-index: 1; }
+.switch span { position: absolute; inset: 0; border-radius: 31px; background: var(--line-2); transition: background .2s; }
+.switch span::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: transform .2s;
+}
+.switch input:checked + span { background: #34C759; }
+.switch input:checked + span::after { transform: translateX(20px); }
+
+.actions { display: grid; gap: 10px; margin: 18px 0 6px; }
+.actions.two { grid-template-columns: 1fr 1fr; }
+.btn {
+  height: 50px; border-radius: 14px; font-weight: 650; font-size: 16px; display: flex;
+  align-items: center; justify-content: center; gap: 8px; width: 100%;
+}
+.btn svg { width: 19px; height: 19px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.secondary { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.btn.danger { background: var(--card); color: var(--red); box-shadow: var(--shadow); }
+.btn.ghost { color: var(--muted); font-weight: 500; font-size: 15px; height: 44px; }
+.btn:disabled { opacity: .5; }
+
+/* forms */
+.field { display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); min-height: 52px; }
+.field:last-child { border-bottom: 0; }
+.field label { width: 104px; flex: none; font-size: 15px; color: var(--ink-2); }
+.field input, .field select, .field textarea {
+  flex: 1; border: 0; outline: 0; background: none; font-size: 16px; min-width: 0; padding: 14px 0;
+}
+.field textarea { resize: none; min-height: 72px; }
+.field input::placeholder, .field textarea::placeholder { color: var(--muted); opacity: .75; }
+.field input[type=date] { -webkit-appearance: none; appearance: none; text-align: left; min-height: 50px; }
+.field .prefix { color: var(--muted); }
+.field.block { display: block; padding: 12px 16px; }
+.field.block label { display: block; width: auto; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.seg { display: flex; background: var(--grey-soft); border-radius: 11px; padding: 3px; gap: 2px; }
+.seg button { flex: 1; height: 34px; border-radius: 9px; font-size: 14.5px; font-weight: 600; color: var(--ink-2); }
+.seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.calc {
+  background: var(--accent-soft); border-radius: 16px; padding: 14px 16px; margin: 0 0 14px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.calc .k { font-size: 12.5px; color: var(--accent-text); font-weight: 600; }
+.calc .v { font-size: 16px; font-weight: 700; color: var(--ink); margin-top: 1px; }
+.hint { font-size: 13px; color: var(--muted); margin: -6px 6px 14px; line-height: 1.4; }
+.hint b { color: var(--ink-2); }
+.quick { display: flex; gap: 8px; padding: 0 16px 12px; flex-wrap: wrap; }
+.quick button { height: 30px; padding: 0 12px; border-radius: 999px; background: var(--grey-soft); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.suggest { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; scrollbar-width: none; }
+.suggest::-webkit-scrollbar { display: none; }
+.suggest button { flex: none; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 13.5px; font-weight: 600; }
+
+/* insights */
+.chart { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 16px 12px; margin-bottom: 14px; }
+.chart h4 { margin: 0; font-size: 16px; font-weight: 700; }
+.chart .cap { font-size: 13px; color: var(--muted); margin: 2px 0 14px; }
+.cols { display: flex; align-items: flex-end; gap: 4px; height: 150px; border-bottom: 1px solid var(--line-2); position: relative; }
+.col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; position: relative; }
+.col .bar { width: 100%; max-width: 26px; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+.col .bar.soft { background: color-mix(in srgb, var(--accent) 45%, var(--card)); }
+.col .val { font-size: 11px; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; visibility: hidden; }
+.col.show .val, .col:hover .val { visibility: visible; }
+.col.sel .bar { background: var(--ink); }
+.xlabels { display: flex; gap: 4px; margin-top: 6px; }
+.xlabels span { flex: 1; text-align: center; font-size: 11px; color: var(--muted); }
+.hbars { display: grid; gap: 10px; }
+.hbar .top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+.hbar .top span:last-child { color: var(--muted); }
+.hbar .track { height: 8px; }
+.hbar .track i { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; }
+.big-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.big-stats .tile .v { font-size: 26px; }
+
+/* notes */
+.card-note {
+  margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: var(--card-2);
+  font-size: 13.5px; color: var(--ink-2); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.note-item { display: block; width: 100%; text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.note-item:last-child { border-bottom: 0; }
+.note-item:active { background: var(--card-2); }
+.note-item .h { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.note-item .h b { font-size: 15.5px; font-weight: 600; }
+.note-item .h span { font-size: 12.5px; color: var(--muted); flex: none; }
+.note-item .who { font-size: 13.5px; color: var(--muted); margin-top: 1px; }
+.note-item .txt { font-size: 15px; margin-top: 8px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+.note-item .txt .lab { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-top: 6px; }
+.note-item .txt .lab:first-child { margin-top: 0; }
+.status-line {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0 2px 16px; font-size: 13.5px; font-weight: 600;
+  padding: 6px 11px; border-radius: 999px;
+}
+.status-line.on { background: var(--green-soft); color: var(--green); }
+.status-line.off { background: var(--amber-soft); color: var(--amber); }
+.status-line svg { width: 15px; height: 15px; }
+
+/* contacts */
+.sugg { margin: 0; padding: 0 12px 10px; display: none; }
+.sugg.on { display: block; }
+.sugg button {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; border-radius: 12px;
+  background: var(--card-2); margin-top: 6px;
+}
+.sugg button:active { background: var(--accent-soft); }
+.sugg .note { font-size: 13px; color: var(--muted); padding: 6px 4px 0; }
+.cav {
+  width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-text); font-weight: 700; font-size: 13px;
+}
+.cmain { flex: 1; min-width: 0; }
+.cmain b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmain span { display: block; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.field .pick {
+  width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-text);
+}
+.field .pick svg { width: 18px; height: 18px; }
+.phone-chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px; }
+.phone-chips:not(:empty) { padding-bottom: 12px; }
+.phone-chips button { height: 30px; padding: 0 11px; border-radius: 999px; background: var(--grey-soft); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.phone-chips button.on { background: var(--accent); color: var(--accent-ink); }
+.picker {
+  position: fixed; inset: 0; z-index: 60; background: var(--bg); max-width: 560px; margin: 0 auto;
+  display: flex; flex-direction: column; transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.picker.on { transform: none; }
+.picker-head { padding: calc(var(--safe-t) + 10px) 16px 10px; display: flex; flex-direction: column; gap: 10px; }
+.picker-top { display: flex; align-items: center; justify-content: space-between; }
+.picker-top h3 { margin: 0; font-size: 17px; }
+.picker-top button { color: var(--accent-text); font-size: 16px; min-width: 60px; text-align: left; }
+.picker-list { flex: 1; overflow-y: auto; padding: 0 16px calc(20px + var(--safe-b)); }
+.picker-list .crow { display: flex; align-items: center; gap: 12px; padding: 11px 4px; width: 100%; text-align: left; border-bottom: 1px solid var(--line); }
+.picker-list .crow:active { background: var(--card-2); }
+.nudge {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 22px;
+}
+.nudge .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; flex: none; }
+.nudge .ic svg { width: 21px; height: 21px; }
+.nudge b { display: block; font-size: 15.5px; }
+.nudge span { font-size: 13.5px; color: var(--muted); }
+.match-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
+.match-card .mh { padding: 12px 16px 8px; }
+.match-card .mh b { font-size: 16px; }
+.match-card .mh span { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
+.mopt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 16px; border-top: 1px solid var(--line); }
+.mopt .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-2); flex: none; display: grid; place-items: center; }
+.mopt.on .radio { border-color: var(--accent); }
+.mopt.on .radio::after { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+.mopt .skip { color: var(--muted); font-size: 14.5px; }
+.inline-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13.5px; font-weight: 600; color: var(--accent-text); }
+.inline-link svg { width: 15px; height: 15px; }
+
+.auto-note { display: none; align-items: center; gap: 6px; padding: 0 16px 12px; font-size: 13.5px; color: var(--green); font-weight: 600; }
+.auto-note.on { display: flex; }
+.auto-note svg { width: 15px; height: 15px; flex: none; }
+.auto-note button { color: var(--accent-text); font-weight: 600; margin-left: auto; }
+.done-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line); }
+.done-row:first-of-type { border-top: 0; }
+.done-row .cmain b { font-size: 14.5px; }
+.done-row .undo { color: var(--accent-text); font-weight: 600; font-size: 14px; flex: none; }
+.done-row.undone { opacity: .45; }
+.done-row.undone .undo { color: var(--muted); }
+
+/* commission chart */
+.col .stack { width: 100%; max-width: 26px; display: flex; flex-direction: column; border-radius: 4px 4px 0 0; overflow: hidden; min-height: 0; }
+.col .stack .bar { width: 100%; max-width: none; border-radius: 0; min-height: 0; }
+.col .stack .bar + .bar { border-top: 2px solid var(--card); }
+.col .bar.due, .lg.due { background: color-mix(in srgb, var(--accent) 35%, var(--card)); }
+.lg.got { background: var(--accent); }
+.legend-row { display: flex; gap: 14px; font-size: 12.5px; color: var(--ink-2); margin: -6px 0 12px; }
+.legend-row i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.col.sel .stack .bar { background: var(--ink); }
+.col.sel .stack .bar.due { background: color-mix(in srgb, var(--ink) 40%, var(--card)); }
+.row.sub { padding-left: 28px; background: var(--card-2); }
+
+/* renewal messages */
+.msg-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.msg-row:last-child { border-bottom: 0; }
+.msg-row .main { flex: 1; min-width: 0; }
+.msg-row .l1 { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-row .l2 { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.role-chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 6px; margin-right: 6px; vertical-align: 1px; }
+.role-chip.owner { background: var(--blue-soft); color: var(--blue); }
+.role-chip.tenant { background: var(--accent-soft); color: var(--accent-text); }
+.send-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px;
+  background: #25D366; color: #fff; font-weight: 700; font-size: 14px; }
+.send-btn svg { width: 17px; height: 17px; }
+.send-btn.ghost { background: var(--grey-soft); color: var(--ink-2); }
+.msg-row .confirm { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.msg-row .confirm .send-btn { height: 32px; justify-content: center; }
+.sent-tag { flex: none; font-size: 13px; font-weight: 600; color: var(--green); }
+.tpl { width: 100%; border: 0; outline: 0; background: none; font: inherit; font-size: 15.5px; line-height: 1.45; padding: 14px 16px; min-height: 160px; resize: vertical; }
+.ph { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 12px; }
+.ph button { height: 28px; padding: 0 10px; border-radius: 999px; background: var(--grey-soft); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+
+.wa-choice {
+  position: fixed; left: 8px; right: 8px; bottom: calc(8px + var(--safe-b)); z-index: 67; max-width: 544px; margin: 0 auto;
+  transform: translateY(120%); transition: transform .25s cubic-bezier(.2,.8,.2,1);
+}
+.wa-choice.on { transform: none; }
+.wa-choice .box { background: var(--card); border-radius: 16px; overflow: hidden; margin-bottom: 8px; }
+.wa-choice .ttl { padding: 12px 16px; font-size: 13px; color: var(--muted); text-align: center; border-bottom: 1px solid var(--line); }
+.wa-choice a, .wa-choice button { display: block; width: 100%; padding: 15px 16px; text-align: center; font-size: 17px; color: var(--accent-text); border-bottom: 1px solid var(--line); }
+.wa-choice a:last-child, .wa-choice .box button:last-child { border-bottom: 0; }
+.wa-choice a small { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.wa-choice .cancel { background: var(--card); border-radius: 16px; font-weight: 700; border: 0; }
+
+.holdable { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: background .15s, transform .15s; }
+.holdable.holding { background: var(--accent-soft); transform: scale(.985); }
+.kv.editing { background: var(--accent-soft); }
+.pe-wrap { overflow: hidden; transition: height .26s cubic-bezier(.2,.8,.2,1), opacity .2s; background: var(--card-2); border-bottom: 1px solid var(--line); }
+.pe-wrap .field { background: var(--card); margin: 8px 12px 0; border-radius: 12px; border-bottom: 0; }
+.pe-wrap .add-field { margin: 8px 12px 0; width: calc(100% - 24px); border-radius: 12px; background: var(--card); border-bottom: 0; }
+.od-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; }
+.od-row input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; margin-top: 2px; }
+.od-row b { display: block; font-size: 15.5px; font-weight: 600; }
+.od-row small { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
+.pe-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px 12px; }
+.pe-btns .btn { height: 42px; font-size: 15px; }
+.add-field { display: block; width: 100%; text-align: left; padding: 14px 16px; font-size: 15.5px; color: var(--accent-text); font-weight: 600; border-bottom: 1px solid var(--line); }
+.add-field:last-child { border-bottom: 0; }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(86px + var(--safe-b)); transform: translate(-50%, 20px);
+  background: var(--ink); color: var(--bg); padding: 11px 16px; border-radius: 14px; font-size: 14.5px; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: all .25s; z-index: 80; max-width: calc(100% - 32px); text-align: center;
+}
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* confirm dialog */
+.dialog {
+  position: fixed; left: 50%; top: 50%; z-index: 70; width: min(320px, calc(100% - 48px));
+  transform: translate(-50%, -50%) scale(.96); opacity: 0; pointer-events: none; transition: all .18s;
+  background: var(--card); border-radius: 18px; overflow: hidden; text-align: center;
+}
+.dialog.on { opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }
+.dialog .dbody { padding: 20px 18px 16px; }
+.dialog h4 { margin: 0 0 6px; font-size: 17px; }
+.dialog p { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.4; }
+.dialog .dbtns { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.dialog .dbtns button { height: 48px; font-size: 16px; color: var(--accent-text); }
+.dialog .dbtns button + button { border-left: 1px solid var(--line); font-weight: 700; }
+.dialog .dbtns button.danger { color: var(--red); }
+#dialogScrim { z-index: 65; }
+
+.settings-note { font-size: 13.5px; color: var(--muted); line-height: 1.5; margin: 8px 6px 0; }
+.settings-note ol { padding-left: 18px; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TODAY -->
+  <section class="view active" id="view-today">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow" id="todayDate"></div>
+        <h1 id="greeting">Today</h1>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" id="refreshBtn" aria-label="Refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="search" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="hq" type="search" placeholder="Search property, owner or tenant" autocomplete="off" enterkeyhint="search">
+      <button class="clear" id="hqClear" aria-label="Clear search">Clear</button>
+    </div>
+    <div id="homeResults" style="display:none"></div>
+    <div id="todayBody">
+      <div class="tiles"><div class="skeleton" style="height:72px"></div><div class="skeleton" style="height:72px"></div><div class="skeleton" style="height:72px"></div></div>
+      <div class="stack"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+    </div>
+  </section>
+
+  <!-- TENANCIES -->
+  <section class="view" id="view-list">
+    <div class="searchbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Building, landlord, tenant, unit…" autocomplete="off" enterkeyhint="search">
+        <button class="clear" id="qClear" aria-label="Clear search">Clear</button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="listBody"></div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="view" id="view-notes">
+    <div class="searchbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="nq" type="search" placeholder="Search notes…" autocomplete="off" enterkeyhint="search">
+      </div>
+      <div class="chips" id="noteChips"></div>
+    </div>
+    <div id="notesBody"></div>
+  </section>
+
+  <!-- INSIGHTS -->
+  <section class="view" id="view-insights">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Your business</div>
+        <h1>Insights</h1>
+      </div>
+    </div>
+    <div id="insightsBody"></div>
+  </section>
+</div>
+
+<!-- Tab bar -->
+<nav class="tabbar">
+  <div class="tabbar-inner">
+    <button class="tab on" data-tab="today">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      Today
+    </button>
+    <button class="tab" data-tab="list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>
+      Tenancies
+    </button>
+    <button class="tab-add" id="addBtn" aria-label="Add a deal">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </button>
+    <button class="tab" data-tab="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+      Notes
+    </button>
+    <button class="tab" data-tab="insights">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      Insights
+    </button>
+  </div>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head">
+    <button class="side-btn" id="sheetLeft">Close</button>
+    <h3 id="sheetTitle"></h3>
+    <button class="side-btn right" id="sheetRight"></button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<div class="picker" id="picker" role="dialog" aria-modal="true">
+  <div class="picker-head">
+    <div class="picker-top"><button id="pickerCancel">Cancel</button><h3 id="pickerTitle">Choose contact</h3><span style="min-width:60px"></span></div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="pq" type="search" placeholder="Search contacts" autocomplete="off">
+    </div>
+  </div>
+  <div class="picker-list" id="pickerList"></div>
+</div>
+
+<div class="scrim" id="dialogScrim"></div>
+<div class="dialog" id="dialog">
+  <div class="dbody"><h4 id="dTitle"></h4><p id="dText"></p></div>
+  <div class="dbtns"><button id="dCancel">Cancel</button><button id="dOk">OK</button></div>
+</div>
+<div class="scrim" id="waScrim" style="z-index:66"></div>
+<div class="wa-choice" id="waChoice" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
+
+<script src="mock.js"></script>
+<script>
+/* ============================================================
+   Server bridge. In Apps Script this is google.script.run;
+   the local preview injects a mock with the same shape.
+   ============================================================ */
+function api(name) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (resolve, reject) {
+    var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) {
+      reject(e && e.message ? e : new Error(String(e)));
+    });
+    r[name].apply(r, args);
+  });
+}
+
+/* ============================================================
+   Dates & formatting
+   ============================================================ */
+var DAY = 86400000;
+function today() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function parseDate(s) {
+  if (!s) return null;
+  s = String(s).trim();
+  var m = s.match(/^(\d{1,2})[\/.-]+(\d{1,2})[\/.-]+(\d{2,4})$/);
+  if (m) {
+    var d = +m[1], mo = +m[2], y = +m[3];
+    if (y < 100) y += 2000;
+    if (mo > 12 && d <= 12) { var sw = d; d = mo; mo = sw; }   // typed month-first, e.g. 9/30/2024
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    return new Date(y, mo - 1, d);
+  }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return null;
+}
+function iso(d) { if (!d) return ''; var p = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+function dmy(d) { return d ? d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() : ''; }
+var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(d) { return d ? d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear() : '-'; }
+function fmtShort(d) { return d ? d.getDate() + ' ' + MON[d.getMonth()] + (d.getFullYear() !== today().getFullYear() ? ' ' + String(d.getFullYear()).slice(2) : '') : '-'; }
+function addMonths(d, m) {
+  var r = new Date(d.getFullYear(), d.getMonth() + m, 1);
+  var last = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
+  r.setDate(Math.min(d.getDate(), last)); return r;
+}
+function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function daysBetween(a, b) { return Math.round((b - a) / DAY); }
+function money(n) {
+  if (n == null || isNaN(n)) return '-';
+  var dec = Math.round(n) !== n;
+  return 'RM ' + n.toLocaleString('en-MY', { minimumFractionDigits: dec ? 2 : 0, maximumFractionDigits: 2 });
+}
+function moneyShort(n) {
+  if (n >= 1e6) return 'RM ' + (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'm';
+  if (n >= 1e4) return 'RM ' + Math.round(n / 1e3) + 'k';
+  return money(n);
+}
+function parseMoney(s) { var n = parseFloat(String(s || '').replace(/[^0-9.]/g, '')); return isNaN(n) ? null : n; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function initials(s) {
+  var w = String(s || '?').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/);
+  return ((w[0] || '?')[0] + (w[1] ? w[1][0] : (w[0] || '')[1] || '')).toUpperCase();
+}
+function phoneDigits(p) {
+  var d = String(p || '').replace(/[^0-9+]/g, '');
+  if (!d) return '';
+  if (d[0] === '+') return d.slice(1);
+  if (d.indexOf('60') === 0) return d;
+  if (d[0] === '0') return '6' + d;        // Malaysian 01x… -> 601x…
+  return d;
+}
+
+/* ============================================================
+   Interpreting her sheet
+   ============================================================ */
+function outcomeOf(status) {
+  var s = String(status || '').toLowerCase().trim();
+  if (!s || s === '-') return '';
+  if (/abort/.test(s)) return 'aborted';
+  if (/(not|non)[\s-]*renew/.test(s)) return 'moving';
+  if (/renew|extension/.test(s)) return 'renewed';
+  if (/expired|laps|termination|undercut|end service|uncontactable|sold|own unit|forfeit|replacement|tenant chan|completed|sale/.test(s)) return 'moving';
+  return '';
+}
+function splitParties(p) {
+  p = String(p || '');
+  var i = p.indexOf('/');
+  if (i < 0) return { landlord: p.trim(), tenant: '' };
+  return { landlord: p.slice(0, i).trim(), tenant: p.slice(i + 1).trim() };
+}
+function monthsOf(r) {
+  if (r.start && r.end) return Math.max(1, Math.round((r.end - r.start + DAY) / (DAY * 30.44)));
+  var t = String(r.tenureText || '').trim(), m;
+  if ((m = t.match(/^([\d.]+)\s*\/\s*12$/))) return Math.round(parseFloat(m[1]));
+  var n = parseFloat(t);
+  if (isNaN(n)) return 12;
+  return n >= 6 && Math.round(n) === n ? n : Math.round(n * 12);
+}
+function tenureLabel(months) {
+  if (!months) return '-';
+  if (months % 12 === 0) return (months / 12) + (months === 12 ? ' year' : ' years');
+  return months + ' months';
+}
+function tenureCell(months) {
+  return months % 12 === 0 ? String(months / 12) : months + '/12';
+}
+
+var STATE = { rows: [], settings: {}, sheetUrl: '', loaded: false, tab: 'today', filter: 'active', q: '', limit: 60 };
+
+function enrich(raw) {
+  var t = today();
+  var p = splitParties(raw.parties);
+  var r = {
+    raw: raw, row: raw.row, id: raw.id,
+    residence: raw.residence || '(no building)', unit: raw.unit || '',
+    type: String(raw.type || '').trim().toUpperCase(),
+    price: parseMoney(raw.price), priceText: raw.price,
+    parties: raw.parties, landlord: p.landlord, tenant: p.tenant,
+    landlordPhone: raw.landlordPhone, tenantPhone: raw.tenantPhone,
+    landlordEmail: raw.landlordEmail || '', tenantEmail: raw.tenantEmail || '',
+    date: parseDate(raw.date), dateText: raw.date,
+    start: parseDate(raw.start), end: parseDate(raw.end), notice: parseDate(raw.notice),
+    tenureText: raw.tenure, status: raw.status, remarks: raw.remarks,
+    // Commission lives in column E; older entries made in the app's "Fee (RM)" column still count.
+    fee: parseMoney(raw.commission) != null ? parseMoney(raw.commission) : parseMoney(raw.fee),
+    feeCollected: /^y/i.test(raw.feeCollected || '') || !!parseDate(raw.feeCollected), collectedOn: parseDate(raw.feeCollected),
+    fee2Collected: /^y/i.test(raw.fee2Collected || ''),
+    ownerMsgSent: parseDate(raw.ownerMsgSent) || (raw.ownerMsgSent ? true : null),
+    tenantMsgSent: parseDate(raw.tenantMsgSent) || (raw.tenantMsgSent ? true : null),
+    aborted: !!raw.aborted
+  };
+  r.outcome = r.aborted ? 'aborted' : outcomeOf(r.status);
+  if (r.outcome === 'aborted') r.aborted = true;
+  r.isRental = r.type === 'R';
+  r.isSale = r.type === 'S';
+  r.months = monthsOf(r);
+  r.noticeDate = r.end ? addMonths(r.end, -2) : null;
+  r.daysLeft = r.end ? daysBetween(t, r.end) : null;
+
+  // phase: what the agent cares about right now
+  if (r.aborted) r.phase = 'aborted';
+  else if (r.isSale) r.phase = 'sale';
+  else if (r.end && r.daysLeft >= 0) r.phase = r.outcome === 'moving' ? 'moving' : 'active';
+  else r.phase = 'ended';
+  r.sortDate = r.date || r.start || r.end || new Date(2000, 0, 1);
+  r.search = [r.residence, r.unit, r.parties, r.status, r.remarks, r.priceText, r.landlordPhone, r.tenantPhone, r.landlordEmail, r.tenantEmail].join(' ').toLowerCase();
+  return r;
+}
+
+/* She copies live leases into a section at the bottom of the sheet, so the
+   same lease can appear twice. Show it once (the lowest row, her working
+   copy) and remember the other rows so changes are written to all of them. */
+function dedupe(rows) {
+  var byKey = {}, out = [];
+  rows.forEach(function (r) {
+    if (!r.start || !r.end) { r.dupes = []; out.push(r); return; }
+    var k = [r.residence, r.parties, iso(r.start), iso(r.end)].join('|').toLowerCase().replace(/\s+/g, ' ');
+    var prev = byKey[k];
+    if (!prev) { r.dupes = []; byKey[k] = r; out.push(r); return; }
+    // keep the later row, but take the most informative status/remarks
+    r.dupes = prev.dupes.concat([{ row: prev.row, residence: prev.raw.residence, parties: prev.raw.parties }]);
+    if (!r.status && prev.status) { r.status = prev.status; r.outcome = prev.outcome; r.phase = prev.phase; }
+    if (!r.remarks && prev.remarks) r.remarks = prev.remarks;
+    out[out.indexOf(prev)] = r; byKey[k] = r;
+  });
+  return out;
+}
+
+/* Free-text notes she keeps in "Further Notice/Status" and "Remarks".
+   Plain one-word statuses (renewed, expired, …) aren't notes. */
+var PLAIN_STATUS = /^(renewed|renewal|expired|completed|lapsed?|early termination|sale|-|not renewed|non renewed|aborted|renewed but no fee|renewed no fee|short renewal|short extension|own renewal|owner self renew|self extension|end service|uncontactable|unit sold|own unit)$/i;
+function notesOf(r) {
+  var out = [];
+  var st = String(r.status || '').trim(), rm = String(r.remarks || '').trim();
+  if (st && !PLAIN_STATUS.test(st) && !parseDate(st)) out.push({ label: 'Status note', text: st });
+  if (rm && !PLAIN_STATUS.test(rm) && rm.toLowerCase() !== st.toLowerCase()) out.push({ label: 'Remarks', text: rm });
+  return out;
+}
+
+/* ---------- Google Contacts (switched off – numbers come from a one-time .vcf import) ---------- */
+var CONTACTS_ENABLED = false;
+var contactsPromise = null;
+function loadContacts() {
+  if (!contactsPromise) {
+    contactsPromise = api('getContacts').then(function (list) {
+      STATE.contacts = list.map(function (c) { c.key = nameTokens(c.n + ' ' + (c.o || '')).join(' '); return c; });
+      return STATE.contacts;
+    }).catch(function (e) { contactsPromise = null; STATE.contactsError = e.message; throw e; });
+  }
+  return contactsPromise;
+}
+var TITLES = /^(mr|mrs|ms|miss|mdm|madam|dr|dato|datuk|datin|tan|sri|puan|pn|encik|en|cik|uncle|auntie|aunty|tuan|haji|hj|sir|mister)$/;
+function nameTokens(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9À-ɏ一-鿿]+/g, ' ').trim().split(/\s+/)
+    .filter(function (w) { return w && !TITLES.test(w); });
+}
+/* Score how well a contact matches a name as she writes it in the sheet. */
+function scoreContact(c, want) {
+  if (!want.length) return 0;
+  var have = c.key.split(' ');
+  var joined = want.join(' ');
+  if (c.key === joined) return 100;
+  var whole = want.filter(function (w) { return have.indexOf(w) >= 0; }).length;
+  if (whole === want.length) return want.length > 1 ? 90 : 75;
+  if (whole && whole >= want.length - 1 && want.length > 1) return 60;
+  var prefix = want.every(function (w) { return have.some(function (h) { return h.indexOf(w) === 0; }); });
+  return prefix ? 50 : 0;
+}
+function findContacts(name, limit) {
+  if (!STATE.contacts) return [];
+  var want = nameTokens(name);
+  if (!want.length) return [];
+  return STATE.contacts.map(function (c) { return { c: c, s: scoreContact(c, want) }; })
+    .filter(function (x) { return x.s >= 50; })
+    .sort(function (a, b) { return b.s - a.s || a.c.n.length - b.c.n.length; })
+    .slice(0, limit || 4);
+}
+/* Contacts whose number matches what she typed (ignores spaces, dashes, +60/0). */
+function normDigits(p) { return String(p || '').replace(/\D/g, '').replace(/^60/, '0').replace(/^6(?=0)/, ''); }
+function contactsByPhone(typed) {
+  var d = normDigits(typed);
+  if (d.length < 7) return [];
+  return STATE.contacts.filter(function (c) {
+    return (c.p || []).some(function (p) { var n = normDigits(p); return n === d || (d.length >= 9 && n.slice(-9) === d.slice(-9)) || n.indexOf(d) === 0; });
+  }).slice(0, 4);
+}
+
+/* A single, clearly-best contact for a name – or null if it's ambiguous. */
+function clearMatch(name) {
+  var hits = findContacts(name, 3);
+  if (!hits.length || hits[0].s < 75) return null;
+  if (hits.length === 1) return hits[0].c;
+  if (hits[0].s === 100 && hits[1].s < 100) return hits[0].c;
+  return null;
+}
+function bestPhone(c) {
+  var mobile = (c.p || []).filter(function (p) { return /^(\+?6?01)/.test(String(p).replace(/[\s-]/g, '')); });
+  return mobile[0] || (c.p || [])[0] || '';
+}
+function contactLine(c) { return [bestPhone(c), (c.e || [])[0]].filter(Boolean).join(' · '); }
+function contactRowHtml(c, attrs) {
+  return '<button ' + attrs + '><span class="cav">' + esc(initials(c.n)) + '</span><span class="cmain"><b>' + esc(c.n) + '</b><span>' + esc(contactLine(c) || 'No number') + '</span></span></button>';
+}
+
+/* Full-screen contact picker. Calls onPick(contact). */
+var pickerCb = null;
+function openContactPicker(title, query, onPick) {
+  pickerCb = onPick;
+  document.getElementById('pickerTitle').textContent = title || 'Choose contact';
+  var q = document.getElementById('pq'); q.value = query || '';
+  document.getElementById('pickerList').innerHTML = '<div class="empty" style="margin-top:8px">Loading your contacts…</div>';
+  document.getElementById('picker').classList.add('on');
+  loadContacts().then(renderPicker).catch(function (e) {
+    document.getElementById('pickerList').innerHTML = empty('⚠️', 'Could not open contacts', e.message);
+  });
+}
+function renderPicker() {
+  var q = document.getElementById('pq').value.trim();
+  var list = q ? findContacts(q, 60).map(function (x) { return x.c; }) : STATE.contacts.slice(0, 200);
+  if (q && !list.length) {
+    var digits = q.replace(/\D/g, '');
+    if (digits.length >= 3) list = STATE.contacts.filter(function (c) { return (c.p || []).some(function (p) { return p.replace(/\D/g, '').indexOf(digits) >= 0; }); }).slice(0, 60);
+  }
+  document.getElementById('pickerList').innerHTML = list.length
+    ? list.map(function (c) { return contactRowHtml(c, 'class="crow" data-pick="' + STATE.contacts.indexOf(c) + '"'); }).join('') +
+      (!q && STATE.contacts.length > 200 ? '<div class="result-note">Type to search all ' + STATE.contacts.length + ' contacts</div>' : '')
+    : empty('🔎', 'No contact found', 'Try another spelling or part of the number.');
+}
+function closePicker() { document.getElementById('picker').classList.remove('on'); pickerCb = null; }
+
+/* Her own word for why a lease ended / isn't continuing. */
+function endLabel(r) {
+  var st = String(r.status || '').toLowerCase();
+  if (/early\s*termination/.test(st)) return 'Early termination';
+  if (/expired/.test(st)) return 'Expired';
+  return 'Not renewed';
+}
+
+/* ---------- Renewal messages (her own wording) ---------- */
+var DEFAULT_TEMPLATES = {
+  owner: 'Good morning {name}. Our tenancy is coming to expiry in approximately 2 month\u2019s time. I\u2019m discussing with tenant on possibility of renewal. Shall keep you posted whether tenant would like to renew/end tenancy as expiry date.\n\nThanks.',
+  tenant: 'Good morning {name}. Our tenancy is coming to expiry in approximately 2 month\u2019s time. Need to notice formally by now of intention to renew/end tenancy as expiry date.\n\nCan you advise? Thanks.'
+};
+var MSG_WINDOW_DAYS = 75;   // starts ~2.5 months before the end, so she can send around the 2-month mark
+function templates() {
+  var t = (STATE.settings && STATE.settings.templates) || {};
+  return { owner: t.owner || DEFAULT_TEMPLATES.owner, tenant: t.tenant || DEFAULT_TEMPLATES.tenant };
+}
+function fillTemplate(text, r, role) {
+  var name = role === 'owner' ? r.landlord : r.tenant;
+  return text.replace(/\{name\}/gi, name || '')
+    .replace(/\{building\}/gi, r.residence || '')
+    .replace(/\{unit\}/gi, r.unit || '')
+    .replace(/\{end\}/gi, fmtDate(r.end))
+    .replace(/\{notice\}/gi, fmtDate(r.noticeDate))
+    .replace(/\{rent\}/gi, r.price != null ? money(r.price) : '');
+}
+function msgPhone(r, role) { return role === 'owner' ? r.landlordPhone : r.tenantPhone; }
+function msgSent(r, role) { return role === 'owner' ? r.ownerMsgSent : r.tenantMsgSent; }
+function waMessageLink(r, role) {
+  var d = phoneDigits(msgPhone(r, role));
+  return d ? 'https://wa.me/' + d + '?text=' + encodeURIComponent(fillTemplate(templates()[role], r, role)) : '';
+}
+/* Leases due a renewal message: running, no decision yet, ending within the window. */
+function messagesDue() {
+  var out = [];
+  STATE.rows.forEach(function (r) {
+    if (!r.isRental || r.phase !== 'active' || r.outcome || r.daysLeft == null || r.daysLeft > MSG_WINDOW_DAYS) return;
+    ['owner', 'tenant'].forEach(function (role) {
+      var name = role === 'owner' ? r.landlord : r.tenant;
+      if (name && !msgSent(r, role)) out.push({ r: r, role: role, name: name });
+    });
+  });
+  return out.sort(function (a, b) { return a.r.end - b.r.end || (a.role === 'owner' ? -1 : 1); });
+}
+/* Last 4 digits, so she can see where a message is going. */
+function tail4(p) { var d = String(p || '').replace(/\D/g, ''); return d ? '…' + d.slice(-4) : ''; }
+function sameNumber(r) {
+  var a = phoneDigits(r.landlordPhone), b = phoneDigits(r.tenantPhone);
+  return a && a === b;
+}
+STATE.opened = {};   // "<row>|<role>" -> opened in WhatsApp this session, waiting for "Sent it?"
+function msgRowHtml(m) {
+  var r = m.r, link = waMessageLink(r, m.role), key = r._i + '|' + m.role;
+  var who = (m.role === 'owner' ? 'Owner' : 'Tenant') + ' template → ' + esc(m.name) + (msgPhone(r, m.role) ? ' (' + tail4(msgPhone(r, m.role)) + ')' : '');
+  var warn = sameNumber(r) ? '<div class="l2 t-amber">Same number as the ' + (m.role === 'owner' ? 'tenant' : 'owner') + ' – check before sending</div>' : '';
+  var action;
+  if (!link) action = '<button class="send-btn ghost" data-open="' + r._i + '">Add number</button>';
+  else if (STATE.opened[key]) action = '<span class="confirm"><button class="send-btn" data-confirm="' + key + '">Yes, sent</button><button class="send-btn ghost" data-notyet="' + key + '">Not yet</button></span>';
+  else action = '<a class="send-btn" href="' + link + '" target="_blank" data-wa="' + key + '">' + ICON.wa + 'Open</a>';
+  return '<div class="msg-row"><div class="main"><div class="l1"><span class="role-chip ' + m.role + '">' + (m.role === 'owner' ? 'Owner' : 'Tenant') + '</span>' + esc(m.name) + '</div>' +
+    '<div class="l2">' + esc(r.residence + (r.unit ? ' ' + r.unit : '')) + ' · ends ' + fmtShort(r.end) + '</div>' +
+    '<div class="l2">' + (STATE.opened[key] ? '<b>Sent it in WhatsApp?</b>' : who) + '</div>' + warn + '</div>' + action + '</div>';
+}
+function openWaChoice(key) {
+  var parts = key.split('|'), r = STATE.rows[+parts[0]], role = parts[1];
+  var name = role === 'owner' ? r.landlord : r.tenant, d = phoneDigits(msgPhone(r, role));
+  document.getElementById('waChoice').innerHTML = '<div class="box"><div class="ttl">WhatsApp ' + esc(name) + ' (' + tail4(msgPhone(r, role)) + ')</div>' +
+    '<a href="' + waMessageLink(r, role) + '" target="_blank" data-wa="' + key + '">Renewal message<small>' + (role === 'owner' ? 'Owner' : 'Tenant') + ' template typed in – you check and send</small></a>' +
+    '<a href="https://wa.me/' + d + '" target="_blank">Just open chat</a></div>' +
+    '<button class="cancel" id="waCancel">Cancel</button>';
+  document.getElementById('waChoice').classList.add('on');
+  document.getElementById('waScrim').classList.add('on');
+}
+function closeWaChoice() {
+  document.getElementById('waChoice').classList.remove('on');
+  document.getElementById('waScrim').classList.remove('on');
+}
+
+function refreshMsgViews(key) {
+  var i = +key.split('|')[0];
+  if (sheetState && document.querySelector('#sheetBody [data-wa="' + key + '"], #sheetBody [data-confirm="' + key + '"], #sheetBody [data-notyet="' + key + '"]')) {
+    var top = document.getElementById('sheetBody').scrollTop;
+    openDetail(STATE.rows[i]); document.getElementById('sheetBody').scrollTop = top;
+  }
+  if (STATE.tab === 'today') { var y = window.scrollY; renderToday(); window.scrollTo(0, y); }
+}
+/* Only called when she confirms she pressed send in WhatsApp. */
+function markSent(r, role) {
+  var patch = {}; patch[role === 'owner' ? 'ownerMsgSent' : 'tenantMsgSent'] = dmy(today());
+  save(r, patch, 'Recorded as sent to ' + (role === 'owner' ? r.landlord : r.tenant), true);
+}
+
+/* What does this lease need, and how urgent is it? */
+function attention(r) {
+  var t = today();
+  if (r.phase === 'moving') {
+    var lbl = endLabel(r);
+    return { tone: 'blue', pill: lbl + (r.daysLeft <= 0 ? ' · ends today' : ' · ' + countdown(r.daysLeft) + ' left'), short: lbl, word: lbl,
+      hint: (lbl === 'Not renewed' ? 'Not renewing' : lbl) + ' – tenant leaves ' + fmtDate(r.end) + ', line up a new one', icon: 'key' };
+  }
+  if (r.phase === 'active') {
+    if (r.outcome === 'renewed') return { tone: 'green', pill: 'Renewed', word: 'Renewed', hint: '', icon: '' };
+    if (r.daysLeft <= 60) return { tone: 'red', pill: countdown(r.daysLeft) + ' left', word: 'Notice date passed', hint: 'Past the 2-month notice – confirm renewal', icon: 'alert' };
+    if (r.daysLeft <= 90) return { tone: 'amber', pill: countdown(r.daysLeft) + ' left', word: 'Renewal due soon', hint: 'Start renewal talk with landlord & tenant', icon: 'chat' };
+    return { tone: 'accent', pill: countdown(r.daysLeft) + ' left', word: 'Active', hint: '', icon: '' };
+  }
+  if (r.phase === 'ended') {
+    if (!r.outcome && r.end && daysBetween(r.end, t) <= 45) return { tone: 'red', pill: 'Ended', hint: 'Lease ended – did they renew?', icon: 'alert' };
+    if (r.outcome === 'renewed') return { tone: 'green', pill: 'Renewed', hint: '' };
+    if (r.outcome === 'moving') return { tone: 'grey', pill: endLabel(r), hint: '' };
+    return { tone: 'grey', pill: 'Ended', hint: '' };
+  }
+  if (r.phase === 'sale') return { tone: 'blue', pill: 'Sale', hint: '' };
+  return { tone: 'red', pill: 'Aborted', hint: '' };
+}
+function countdown(d) {
+  if (d == null) return '';
+  if (d <= 0) return 'today';
+  if (d === 1) return '1 day';
+  if (d < 100) return d + ' days';
+  var m = Math.round(d / 30.44);
+  return m + ' mo';
+}
+
+/* 2-year leases: second-year fee falls due 12 months in */
+function fee2Due(r) {
+  if (r.phase !== 'active' && r.phase !== 'moving') return null;
+  if (!r.start || r.months < 24 || r.fee2Collected) return null;
+  if (/2nd year fee (paid|collected)|second year fee (paid|collected)/i.test((r.status || '') + ' ' + (r.remarks || ''))) return null;
+  var due = addMonths(r.start, 12);
+  var d = daysBetween(today(), due);
+  if (d > 45 || d < -120) return null;
+  return { due: due, days: d };
+}
+
+/* ============================================================
+   Icons
+   ============================================================ */
+var ICON = {
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5M12 16h.01"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>',
+  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M17 6l3 3M14.5 8.5l2 2"/></svg>',
+  money: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.5"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+  wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.8 11.8 0 0 0 4.6 4c1.7.7 2.3.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2z"/></svg>',
+  renew: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 21v-5h5"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
+  contact: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>'
+};
+
+/* ============================================================
+   Rendering helpers
+   ============================================================ */
+function titleHtml(r) {
+  return esc(r.residence) + (r.unit ? ' <span class="unit">' + esc(r.unit) + '</span>' : '');
+}
+function peopleHtml(r) {
+  if (!r.tenant) return '<span>' + esc(r.landlord || '—') + '</span>';
+  return '<span>' + esc(r.landlord) + '</span><span class="arrow">→</span><span>' + esc(r.tenant) + '</span>';
+}
+function leaseCard(r, opts) {
+  opts = opts || {};
+  var a = attention(r);
+  var pct = r.start && r.end ? Math.min(100, Math.max(0, (today() - r.start) / (r.end - r.start) * 100)) : 0;
+  var hint = opts.hint || a.hint;
+  var tone = opts.tone || a.tone;
+  return '<button class="card" data-open="' + r._i + '">' +
+    '<div class="card-row"><div class="card-title">' + titleHtml(r) + '</div>' +
+    '<span class="pill ' + (opts.pillTone || a.tone) + ' num">' + esc(opts.pill || a.pill) + '</span></div>' +
+    '<div class="card-people">' + peopleHtml(r) + '</div>' +
+    '<div class="card-meta num"><span><b>' + money(r.price) + '</b>/mo</span><span>Ends ' + fmtDate(r.end) + '</span></div>' +
+    (hint ? '<div class="card-hint t-' + (tone === 'accent' ? 'green' : tone) + '">' + (ICON[opts.icon || a.icon] || '') + esc(hint) + '</div>' : '') +
+    (notesOf(r).length ? '<div class="card-note">' + esc(notesOf(r).map(function (n) { return n.text; }).join(' · ')) + '</div>' : '') +
+    (opts.noBar ? '' : '<div class="progress"><i style="width:' + pct.toFixed(1) + '%"></i></div>') +
+    '</button>';
+}
+function listRow(r) {
+  var a = attention(r);
+  var cls = r.isSale ? 'sale' : (r.phase === 'ended' || r.phase === 'aborted') ? 'dim' : '';
+  var when = r.phase === 'active' || r.phase === 'moving' ? ''
+    : r.isSale ? fmtShort(r.date) : r.end ? 'Ended ' + fmtShort(r.end) : fmtShort(r.date);
+  return '<button class="row" data-open="' + r._i + '">' +
+    '<div class="avatar ' + cls + '">' + esc(initials(r.residence)) + '</div>' +
+    '<div class="main"><div class="l1">' + esc(r.residence) + (r.unit ? ' · ' + esc(r.unit) : '') + '</div>' +
+    '<div class="l2">' + esc([r.landlord, r.tenant].filter(Boolean).join(' → ') || '—') + (when ? ' · ' + when : '') + '</div></div>' +
+    '<div class="side"><div class="amt num">' + (r.price != null ? moneyShort(r.price) : '') + '</div>' +
+    '<span class="pill ' + a.tone + '">' + esc(a.short || a.pill) + '</span></div></button>';
+}
+function empty(icon, title, text) {
+  return '<div class="empty"><div class="big">' + icon + '</div><b>' + esc(title) + '</b>' + esc(text) + '</div>';
+}
+
+/* ============================================================
+   TODAY
+   ============================================================ */
+function renderToday() {
+  var t = today();
+  var hr = new Date().getHours();
+  document.getElementById('greeting').textContent = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('todayDate').textContent = t.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  var rows = STATE.rows;
+  var active = rows.filter(function (r) { return r.isRental && (r.phase === 'active' || r.phase === 'moving'); });
+  var act = rows.filter(function (r) {
+    if (!r.isRental) return false;
+    if (r.phase === 'active' && !r.outcome && r.daysLeft <= 90) return true;
+    if (r.phase === 'ended' && !r.outcome && r.end && daysBetween(r.end, t) <= 45) return true;
+    return false;
+  }).sort(function (a, b) { return a.end - b.end; });
+  var moving = rows.filter(function (r) { return r.isRental && r.phase === 'moving' && r.daysLeft <= 120; })
+    .sort(function (a, b) { return a.end - b.end; });
+  var fees = [];
+  rows.forEach(function (r) {
+    var f = fee2Due(r);
+    if (f) fees.push({ r: r, label: '2nd-year fee', due: f.due, days: f.days });
+    else if (r.fee && !r.feeCollected && r.phase !== 'aborted' && r.date && daysBetween(r.date, t) <= 180)
+      fees.push({ r: r, label: 'Commission ' + money(r.fee), due: r.date, days: daysBetween(t, r.date) });
+  });
+  fees.sort(function (a, b) { return a.due - b.due; });
+  var later = active.filter(function (r) { return r.daysLeft > 90; });
+  var rent = active.reduce(function (s, r) { return s + (r.price || 0); }, 0);
+  var urgent = act.filter(function (r) { return r.daysLeft == null || r.daysLeft <= 60; }).length;
+
+  var h = '';
+  var st = STATE.settings || {};
+  var synced = st.lastSync ? new Date(st.lastSync) : null;
+  h += st.calendar
+    ? '<button class="status-line on" id="remStatus">' + ICON.check + 'Reminders on' + (synced ? ' · synced ' + (iso(synced) === iso(t) ? 'today' : fmtShort(synced)) : '') + '</button>'
+    : '<button class="status-line off" id="remStatus">' + ICON.alert + 'Calendar reminders are off – tap to turn on</button>';
+  var missing = CONTACTS_ENABLED ? leasesMissingContacts().length : 0;
+  var nudge = missing ? '<button class="nudge" id="matchNudge"><span class="ic">' + ICON.contact + '</span><span><b>Fill phone numbers from contacts</b><span>' + missing + ' active ' + (missing === 1 ? 'lease is' : 'leases are') + ' missing a landlord or tenant number</span></span></button>' : '';
+  h += '<div class="tiles">' +
+    '<button class="tile' + (urgent ? ' hot' : '') + '" data-jump="soon"><div class="v num">' + act.length + '</div><div class="k">Need attention</div></button>' +
+    '<button class="tile" data-jump="active"><div class="v num">' + active.length + '</div><div class="k">Active tenancies</div></button>' +
+    '<button class="tile" data-jump="active"><div class="v num">' + moneyShort(rent) + '</div><div class="k">Monthly rent managed</div></button>' +
+    '</div>';
+
+  h += nudge;
+  var due = messagesDue();
+  if (due.length) {
+    h += '<div class="section"><div class="section-head"><h2>Renewal messages</h2><span class="sub">' + due.length + ' to send</span></div>' +
+      '<div class="hint" style="margin:0 6px 10px">Open puts the message in WhatsApp for you to check and send yourself.</div>' +
+      '<div class="list">' + due.slice(0, 12).map(msgRowHtml).join('') + '</div>' +
+      (due.length > 12 ? '<div class="result-note">' + (due.length - 12) + ' more – they\u2019ll appear as you send these</div>' : '') + '</div>';
+  }
+  h += '<div class="section"><div class="section-head"><h2>Needs attention</h2><span class="sub">Next 90 days</span></div>';
+  if (act.length) h += '<div class="stack">' + act.map(function (r) { return leaseCard(r); }).join('') + '</div>';
+  else h += empty('🌿', 'All clear', 'No leases end in the next 90 days.');
+  h += '</div>';
+
+  if (fees.length) {
+    h += '<div class="section"><div class="section-head"><h2>Fees to collect</h2><span class="sub">' + fees.length + '</span></div><div class="stack">';
+    h += fees.map(function (f) {
+      var overdue = f.days < 0;
+      return leaseCard(f.r, {
+        pill: overdue ? 'Due ' + (-f.days) + 'd ago' : f.days === 0 ? 'Due today' : 'Due in ' + countdown(f.days),
+        pillTone: overdue ? 'red' : 'amber', tone: 'amber',
+        hint: f.label + ' · due ' + fmtDate(f.due), icon: 'money', noBar: true
+      });
+    }).join('');
+    h += '</div></div>';
+  }
+
+  if (moving.length) {
+    h += '<div class="section"><div class="section-head"><h2>Units coming free</h2><span class="sub">Tenant not renewing</span></div><div class="stack">';
+    h += moving.map(function (r) { return leaseCard(r); }).join('');
+    h += '</div></div>';
+  }
+
+  h += '<div class="section"><div class="section-head"><h2>Later</h2><button class="link" data-jump="active">See all</button></div>';
+  if (later.length) {
+    var next = later.slice().sort(function (a, b) { return a.end - b.end; }).slice(0, 4);
+    h += '<div class="list">' + next.map(listRow).join('') + '</div>';
+    if (later.length > 4) h += '<button class="more-btn" data-jump="active">' + (later.length - 4) + ' more active tenancies</button>';
+  } else h += empty('📭', 'Nothing further out', 'Add a deal with the + button.');
+  h += '</div>';
+
+  document.getElementById('todayBody').innerHTML = h;
+  bind('remStatus', openSettings);
+  bind('matchNudge', openMatcher);
+}
+
+/* Home search: property, owner or tenant. Active leases first. */
+function searchRows(q) {
+  var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+  return STATE.rows.filter(function (r) { return terms.every(function (t) { return r.search.indexOf(t) >= 0; }); })
+    .sort(function (a, b) {
+      var ra = a.phase === 'active' || a.phase === 'moving' ? 0 : 1, rb = b.phase === 'active' || b.phase === 'moving' ? 0 : 1;
+      return ra - rb || (ra === 0 ? a.end - b.end : b.sortDate - a.sortDate);
+    });
+}
+function renderHomeSearch() {
+  var q = document.getElementById('hq').value.trim();
+  var res = document.getElementById('homeResults'), body = document.getElementById('todayBody');
+  document.getElementById('hqClear').style.display = q ? 'block' : 'none';
+  if (!q) { res.style.display = 'none'; body.style.display = ''; return; }
+  res.style.display = ''; body.style.display = 'none';
+  var hits = searchRows(q);
+  var h = '';
+  // building summary when it looks like a property search
+  var names = {};
+  hits.forEach(function (r) { names[r.residence] = (names[r.residence] || 0) + 1; });
+  var bkeys = Object.keys(names).filter(function (k) { return k.toLowerCase().indexOf(q.toLowerCase()) >= 0; });
+  if (bkeys.length === 1) h += '<div class="bldg"><b>' + esc(bkeys[0]) + '</b>' + buildingInfo(bkeys[0]) + '</div>';
+  if (!hits.length) h += empty('🔎', 'No matches', 'Try part of the building, owner or tenant name.');
+  else {
+    var active = hits.filter(function (r) { return r.phase === 'active' || r.phase === 'moving'; });
+    var past = hits.filter(function (r) { return !(r.phase === 'active' || r.phase === 'moving'); });
+    if (active.length) h += '<div class="section-head"><h2>Current</h2><span class="sub num">' + active.length + '</span></div><div class="list" style="margin-bottom:18px">' + active.slice(0, 30).map(listRow).join('') + '</div>';
+    if (past.length) h += '<div class="section-head"><h2>Past &amp; other</h2><span class="sub num">' + past.length + '</span></div><div class="list">' + past.slice(0, 30).map(listRow).join('') + '</div>' +
+      (past.length > 30 ? '<button class="more-btn" id="hqAll">See all ' + hits.length + ' in Tenancies</button>' : '');
+  }
+  res.innerHTML = h;
+  bind('hqAll', function () { goSearch(q); });
+}
+var hqTimer;
+document.getElementById('hq').addEventListener('input', function () { clearTimeout(hqTimer); hqTimer = setTimeout(renderHomeSearch, 100); });
+document.getElementById('hqClear').onclick = function () { document.getElementById('hq').value = ''; renderHomeSearch(); };
+
+/* ============================================================
+   TENANCIES (search + filters)
+   ============================================================ */
+var FILTERS = [
+  { id: 'active', label: 'Active', test: function (r) { return r.isRental && (r.phase === 'active' || r.phase === 'moving'); } },
+  { id: 'soon', label: 'Ending ≤ 90d', test: function (r) { return r.isRental && (r.phase === 'active' || r.phase === 'moving') && r.daysLeft <= 90; } },
+  { id: 'moving', label: 'Expired / ending', test: function (r) { return r.phase === 'moving'; } },
+  { id: 'ended', label: 'Past', test: function (r) { return r.phase === 'ended'; } },
+  { id: 'sale', label: 'Sales', test: function (r) { return r.isSale && !r.aborted; } },
+  { id: 'aborted', label: 'Aborted', test: function (r) { return r.aborted; } },
+  { id: 'all', label: 'All', test: function () { return true; } }
+];
+function renderChips(counts) {
+  document.getElementById('chips').innerHTML = FILTERS.map(function (f) {
+    return '<button class="chip' + (STATE.filter === f.id ? ' on' : '') + '" data-filter="' + f.id + '">' +
+      esc(f.label) + '<span class="c num">' + counts[f.id] + '</span></button>';
+  }).join('');
+}
+function renderList() {
+  var q = STATE.q.trim().toLowerCase();
+  var terms = q ? q.split(/\s+/) : [];
+  var base = STATE.rows.filter(function (r) { return terms.every(function (t) { return r.search.indexOf(t) >= 0; }); });
+  var counts = {};
+  FILTERS.forEach(function (f) { counts[f.id] = base.filter(f.test).length; });
+  renderChips(counts);
+  document.getElementById('qClear').style.display = q ? 'block' : 'none';
+
+  var f = FILTERS.filter(function (x) { return x.id === STATE.filter; })[0];
+  var list = base.filter(f.test);
+  var activeLike = STATE.filter === 'active' || STATE.filter === 'soon' || STATE.filter === 'moving';
+  list.sort(activeLike ? function (a, b) { return a.end - b.end; } : function (a, b) { return b.sortDate - a.sortDate; });
+
+  var h = '';
+  // building summary when the search matches one building
+  if (q) {
+    var names = {};
+    base.forEach(function (r) { names[r.residence] = (names[r.residence] || 0) + 1; });
+    var keys = Object.keys(names);
+    if (keys.length === 1 || (keys.length && keys.every(function (k) { return k.toLowerCase().indexOf(q) >= 0; }) && keys.length <= 2)) {
+      var b = keys.sort(function (a, b) { return names[b] - names[a]; })[0];
+      var bi = buildingInfo(b);
+      if (bi) h += '<div class="bldg"><b>' + esc(b) + '</b>' + bi + '</div>';
+    }
+  }
+  if (!list.length) {
+    var hidden = FILTERS.filter(function (x) { return x.id !== STATE.filter && x.id !== 'all' && counts[x.id]; });
+    h += empty('🔎', q ? 'No matches here' : 'Nothing in this list',
+      hidden.length ? 'Try ' + hidden.map(function (x) { return x.label + ' (' + counts[x.id] + ')'; }).join(', ') + '.' : '');
+  } else {
+    h += '<div class="result-note num">' + list.length + (list.length === 1 ? ' record' : ' records') + '</div>';
+    h += '<div class="list">' + list.slice(0, STATE.limit).map(listRow).join('') + '</div>';
+    if (list.length > STATE.limit) h += '<button class="more-btn" id="showMore">Show ' + Math.min(60, list.length - STATE.limit) + ' more</button>';
+  }
+  document.getElementById('listBody').innerHTML = h;
+}
+function buildingInfo(name) {
+  var cut = addMonths(today(), -36);
+  var deals = STATE.rows.filter(function (r) { return r.residence === name && !r.aborted; });
+  var recent = deals.filter(function (r) { return r.isRental && r.price && (r.date || r.start) >= cut; }).map(function (r) { return r.price; });
+  var s = deals.length + ' deals with you';
+  if (recent.length) {
+    recent.sort(function (a, b) { return a - b; });
+    var lo = recent[0], hi = recent[recent.length - 1];
+    s += ' · rents in the last 3 years ' + (lo === hi ? money(lo) : money(lo) + ' – ' + money(hi));
+  }
+  return s;
+}
+
+/* ============================================================
+   NOTES – everything she wrote in Remarks / Further Notice
+   ============================================================ */
+var NOTE_FILTERS = [
+  { id: 'active', label: 'Active leases', test: function (r) { return r.phase === 'active' || r.phase === 'moving'; } },
+  { id: 'all', label: 'All', test: function () { return true; } }
+];
+STATE.noteFilter = 'active'; STATE.nq = '';
+function renderNotes() {
+  var q = STATE.nq.trim().toLowerCase();
+  var withNotes = STATE.rows.filter(function (r) { return notesOf(r).length; });
+  var base = withNotes.filter(function (r) { return !q || (r.search + ' ' + notesOf(r).map(function (n) { return n.text; }).join(' ')).toLowerCase().indexOf(q) >= 0; });
+  document.getElementById('noteChips').innerHTML = NOTE_FILTERS.map(function (f) {
+    return '<button class="chip' + (STATE.noteFilter === f.id ? ' on' : '') + '" data-nfilter="' + f.id + '">' + f.label + '<span class="c num">' + base.filter(f.test).length + '</span></button>';
+  }).join('');
+  var f = NOTE_FILTERS.filter(function (x) { return x.id === STATE.noteFilter; })[0];
+  var list = base.filter(f.test).sort(function (a, b) {
+    if (STATE.noteFilter === 'active') return a.end - b.end;
+    return b.sortDate - a.sortDate;
+  });
+  var h = '';
+  if (!list.length) {
+    h = empty('📝', q ? 'No notes match' : 'No notes here', STATE.noteFilter === 'active' ? 'Notes on your active leases show here. Try "All".' : 'Add remarks when you edit a deal.');
+  } else {
+    h = '<div class="result-note num">' + list.length + (list.length === 1 ? ' note' : ' notes') + '</div><div class="list">' +
+      list.slice(0, 150).map(function (r) {
+        var a = attention(r);
+        var when = r.end ? (r.phase === 'active' || r.phase === 'moving' ? 'Ends ' : 'Ended ') + fmtShort(r.end) : fmtShort(r.date);
+        return '<button class="note-item" data-open="' + r._i + '"><div class="h"><b>' + esc(r.residence) + (r.unit ? ' · ' + esc(r.unit) : '') + '</b><span class="num">' + esc(when) + '</span></div>' +
+          '<div class="who">' + esc([r.landlord, r.tenant].filter(Boolean).join(' → ')) + ' · <span class="t-' + (a.tone === 'accent' ? 'green' : a.tone === 'grey' ? '' : a.tone) + '">' + esc(a.short || a.pill) + '</span></div>' +
+          '<div class="txt">' + notesOf(r).map(function (n) { return '<span class="lab">' + n.label + '</span>' + esc(n.text); }).join('') + '</div></button>';
+      }).join('') + '</div>';
+  }
+  document.getElementById('notesBody').innerHTML = h;
+}
+
+/* ============================================================
+   COMMISSION – take-home per month
+   ============================================================ */
+function monthKey(d) { return d.getFullYear() * 12 + d.getMonth(); }
+function monthName(k, long) { var y = Math.floor(k / 12), m = k % 12; return long ? ['January','February','March','April','May','June','July','August','September','October','November','December'][m] + ' ' + y : MON[m] + (m === 0 ? " '" + String(y).slice(2) : ''); }
+/* Each commission once: collected ones in the month collected, the rest in the deal month. */
+function commissionEntries() {
+  return STATE.rows.filter(function (r) { return r.fee && !r.aborted; }).map(function (r) {
+    var when = r.feeCollected ? (r.collectedOn || r.date || r.start) : (r.date || r.start);
+    return when ? { r: r, amt: r.fee, collected: r.feeCollected, k: monthKey(when) } : null;
+  }).filter(Boolean);
+}
+function moneyTile(n) {
+  if (n >= 1e6) return 'RM ' + (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'm';
+  if (n >= 1000) return 'RM ' + (n / 1000).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'k';
+  return 'RM ' + Math.round(n);
+}
+function renderIncome() {
+  var t = today(), nowK = monthKey(t), list = commissionEntries();
+  var sum = function (f) { return list.filter(f).reduce(function (n, e) { return n + e.amt; }, 0); };
+  var thisMonth = sum(function (e) { return e.k === nowK; });
+  var thisYear = sum(function (e) { return Math.floor(e.k / 12) === t.getFullYear(); });
+  var pending = sum(function (e) { return !e.collected; });
+  var h = '<div class="section"><div class="section-head"><h2>Take-home</h2><span class="sub">Commission</span></div>';
+  if (!list.length) {
+    h += empty('💰', 'No commission recorded yet', 'Open a lease and enter its commission. It also goes into column E of your sheet.');
+    return h + '</div>';
+  }
+  h += '<div class="tiles">' +
+    '<div class="tile"><div class="v num">' + moneyTile(thisMonth) + '</div><div class="k">' + MON[t.getMonth()] + ' so far</div></div>' +
+    '<div class="tile"><div class="v num">' + moneyTile(thisYear) + '</div><div class="k">' + t.getFullYear() + ' total</div></div>' +
+    '<div class="tile"><div class="v num' + (pending ? ' t-amber' : '') + '">' + moneyTile(pending) + '</div><div class="k">To collect</div></div></div>';
+
+  // last 12 months, collected vs still to collect (stacked)
+  var months = [];
+  for (var i = 11; i >= 0; i--) {
+    var k = nowK - i;
+    months.push({ k: k, got: sum(function (e) { return e.k === k && e.collected; }), due: sum(function (e) { return e.k === k && !e.collected; }) });
+  }
+  var max = Math.max.apply(null, months.map(function (m) { return m.got + m.due; }).concat([1]));
+  h += '<div class="chart"><h4>Commission by month</h4><div class="cap">Last 12 months · tap a bar for the cases</div>' +
+    '<div class="legend-row"><span><i class="lg got"></i>Collected</span><span><i class="lg due"></i>Still to collect</span></div>' +
+    '<div class="cols" role="img" aria-label="' + esc(months.map(function (m) { return monthName(m.k, true) + ' ' + money(m.got + m.due); }).join(', ')) + '">' +
+    months.map(function (m) {
+      var tot = m.got + m.due;
+      return '<button class="col' + (m.k === STATE.incomeMonth ? ' sel' : '') + (tot && (m.k === nowK || tot === max) ? ' show' : '') + '" data-month="' + m.k + '" title="' + esc(monthName(m.k, true) + ': ' + money(tot)) + '">' +
+        '<span class="val num">' + (tot ? moneyShort(tot).replace('RM ', '') : '') + '</span>' +
+        '<span class="stack" style="height:' + (tot / max * 100).toFixed(1) + '%">' +
+        (m.due ? '<span class="bar due" style="flex:' + m.due + '"></span>' : '') +
+        (m.got ? '<span class="bar" style="flex:' + m.got + '"></span>' : '') + '</span></button>';
+    }).join('') + '</div><div class="xlabels">' + months.map(function (m) { return '<span>' + monthName(m.k) + '</span>'; }).join('') + '</div></div>';
+
+  // month-by-month list (every month with income), newest first
+  var byK = {};
+  list.forEach(function (e) { (byK[e.k] = byK[e.k] || []).push(e); });
+  var keys = Object.keys(byK).map(Number).sort(function (a, b) { return b - a; });
+  if (STATE.incomeMonth == null || !byK[STATE.incomeMonth]) STATE.incomeMonth = keys[0];
+  h += '<div class="section-head" style="margin-top:6px"><h2 style="font-size:17px">By month</h2></div><div class="list">' +
+    keys.slice(0, 24).map(function (k) {
+      var es = byK[k], tot = es.reduce(function (n, e) { return n + e.amt; }, 0), due = es.filter(function (e) { return !e.collected; }).length;
+      var open = k === STATE.incomeMonth;
+      return '<button class="row" data-month="' + k + '"><div class="main"><div class="l1">' + monthName(k, true) + '</div><div class="l2">' + es.length + (es.length === 1 ? ' case' : ' cases') + (due ? ' · ' + due + ' to collect' : ' · all collected') + '</div></div>' +
+        '<div class="side"><div class="amt num">' + money(tot) + '</div></div></button>' +
+        (open ? es.sort(function (a, b) { return b.amt - a.amt; }).map(function (e) {
+          return '<button class="row sub" data-open="' + e.r._i + '"><div class="main"><div class="l1">' + esc(e.r.residence) + (e.r.unit ? ' · ' + esc(e.r.unit) : '') + '</div><div class="l2">' + esc([e.r.landlord, e.r.tenant].filter(Boolean).join(' → ')) + '</div></div>' +
+            '<div class="side"><div class="amt num">' + money(e.amt) + '</div><span class="pill ' + (e.collected ? 'green' : 'amber') + '">' + (e.collected ? 'Collected' : 'To collect') + '</span></div></button>';
+        }).join('') : '');
+    }).join('') + '</div>';
+  return h + '</div>';
+}
+
+/* ============================================================
+   INSIGHTS
+   ============================================================ */
+function renderInsights() {
+  var rows = STATE.rows.filter(function (r) { return !r.aborted; });
+  var t = today();
+  var thisYear = t.getFullYear();
+  var dealsThisYear = rows.filter(function (r) { return r.date && r.date.getFullYear() === thisYear; }).length;
+
+  // renewal rate over leases that ended in the last 24 months with a known outcome
+  var cut = addMonths(t, -24);
+  var decided = rows.filter(function (r) { return r.isRental && r.end && r.end >= cut && r.end <= addMonths(t, 4) && (r.outcome === 'renewed' || r.outcome === 'moving'); });
+  var renewed = decided.filter(function (r) { return r.outcome === 'renewed'; }).length;
+  var rate = decided.length ? Math.round(renewed / decided.length * 100) : null;
+
+  var h = renderIncome();
+  h += '<div class="big-stats">' +
+    '<div class="tile"><div class="v num">' + dealsThisYear + '</div><div class="k">Deals in ' + thisYear + '</div></div>' +
+    '<div class="tile"><div class="v num">' + (rate == null ? '–' : rate + '%') + '</div><div class="k">Renewal rate · last 2 years</div></div>' +
+    '</div>';
+
+  // Deals per year
+  var years = {};
+  rows.forEach(function (r) { if (r.date) { var y = r.date.getFullYear(); years[y] = (years[y] || 0) + 1; } });
+  var ys = Object.keys(years).map(Number).sort();
+  if (ys.length) {
+    var first = Math.max(ys[0], thisYear - 9);
+    var series = [];
+    for (var y = first; y <= thisYear; y++) series.push({ label: "'" + String(y).slice(2), full: String(y), v: years[y] || 0 });
+    h += columnChart('Deals per year', 'Rentals and sales you closed, by deal date', series, { lastSoft: true, unit: 'deals' });
+  }
+
+  // Leases ending per month (next 12 months)
+  var months = [];
+  for (var i = 0; i < 12; i++) {
+    var m0 = new Date(t.getFullYear(), t.getMonth() + i, 1), m1 = new Date(t.getFullYear(), t.getMonth() + i + 1, 1);
+    var n = rows.filter(function (r) { return r.isRental && (r.phase === 'active' || r.phase === 'moving') && r.end >= m0 && r.end < m1; }).length;
+    months.push({ label: MON[m0.getMonth()][0] + (m0.getMonth() === 0 ? "'" + String(m0.getFullYear()).slice(2) : ''), full: MON[m0.getMonth()] + ' ' + m0.getFullYear(), v: n });
+  }
+  h += columnChart('Leases ending', 'Active tenancies by end month · plan your renewal workload', months, { unit: 'leases' });
+
+  // Top buildings, last 3 years
+  var cut3 = addMonths(t, -36), tally = {};
+  rows.forEach(function (r) { if ((r.date || r.start) >= cut3) tally[r.residence] = (tally[r.residence] || 0) + 1; });
+  var top = Object.keys(tally).map(function (k) { return { k: k, v: tally[k] }; }).sort(function (a, b) { return b.v - a.v; }).slice(0, 6);
+  if (top.length) {
+    var max = top[0].v;
+    h += '<div class="chart"><h4>Top buildings</h4><div class="cap">Most deals in the last 3 years · tap to see them</div><div class="hbars">' +
+      top.map(function (b) {
+        return '<button class="hbar" data-building="' + esc(b.k) + '" style="text-align:left;width:100%"><div class="top"><span>' + esc(b.k) + '</span><span class="num">' + b.v + '</span></div>' +
+          '<div class="track"><i style="width:' + (b.v / max * 100).toFixed(1) + '%"></i></div></button>';
+      }).join('') + '</div></div>';
+  }
+  document.getElementById('insightsBody').innerHTML = h;
+}
+function columnChart(title, cap, series, opts) {
+  var max = Math.max.apply(null, series.map(function (s) { return s.v; }).concat([1]));
+  var peak = series.reduce(function (a, s, i) { return s.v > series[a].v ? i : a; }, 0);
+  return '<div class="chart"><h4>' + esc(title) + '</h4><div class="cap">' + esc(cap) + '</div>' +
+    '<div class="cols" role="img" aria-label="' + esc(title + ': ' + series.map(function (s) { return s.full + ' ' + s.v; }).join(', ')) + '">' +
+    series.map(function (s, i) {
+      var last = opts.lastSoft && i === series.length - 1;
+      return '<button class="col' + (i === peak || i === series.length - 1 ? ' show' : '') + '" title="' + esc(s.full + ': ' + s.v + ' ' + opts.unit) + '">' +
+        '<span class="val num">' + s.v + '</span><span class="bar' + (last ? ' soft' : '') + '" style="height:' + (s.v / max * 100).toFixed(1) + '%"></span></button>';
+    }).join('') + '</div><div class="xlabels">' + series.map(function (s) { return '<span>' + esc(s.label) + '</span>'; }).join('') + '</div>' +
+    (opts.lastSoft ? '<div class="cap" style="margin:8px 0 0">Lighter bar = this year so far</div>' : '') + '</div>';
+}
+
+/* ============================================================
+   Sheet (bottom sheet) machinery
+   ============================================================ */
+var sheetEl = document.getElementById('sheet'), scrimEl = document.getElementById('scrim');
+var sheetState = null;
+function openSheet(opts) {
+  sheetState = opts;
+  document.getElementById('sheetTitle').textContent = opts.title || '';
+  var left = document.getElementById('sheetLeft'), right = document.getElementById('sheetRight');
+  left.textContent = opts.left || 'Close';
+  right.textContent = opts.right || '';
+  right.style.visibility = opts.right ? 'visible' : 'hidden';
+  right.disabled = false;
+  document.getElementById('sheetBody').innerHTML = opts.body;
+  document.getElementById('sheetBody').scrollTop = 0;
+  if (!sheetEl.classList.contains('on')) STATE.scrollBeforeSheet = window.scrollY;
+  sheetEl.style.transform = ''; scrimEl.style.opacity = '';
+  sheetEl.classList.add('on'); scrimEl.classList.add('on');
+  document.body.style.overflow = 'hidden';
+  if (opts.onOpen) opts.onOpen();
+}
+function closeSheet() {
+  sheetEl.style.transform = ''; scrimEl.style.opacity = '';
+  sheetEl.classList.remove('on'); scrimEl.classList.remove('on');
+  document.body.style.overflow = '';
+  if (STATE.scrollBeforeSheet != null) { window.scrollTo(0, STATE.scrollBeforeSheet); STATE.scrollBeforeSheet = null; }
+  sheetState = null;
+}
+document.getElementById('sheetLeft').onclick = function () { if (sheetState && sheetState.onLeft) sheetState.onLeft(); else requestClose(); };
+document.getElementById('sheetRight').onclick = function () { if (sheetState && sheetState.onRight) sheetState.onRight(); };
+scrimEl.onclick = function () { requestClose(); };
+
+/* Swipe down on an open sheet to close it (from the top bar, or once its content is scrolled to the top). */
+(function () {
+  var startY = 0, lastY = 0, lastT = 0, vel = 0, dragging = false, armed = false;
+  var body = document.getElementById('sheetBody');
+  sheetEl.addEventListener('touchstart', function (e) {
+    if (!sheetState || e.touches.length !== 1) return;
+    var inBody = body.contains(e.target);
+    // inside the content only when it's already at the very top; never from text fields
+    armed = !inBody || (body.scrollTop <= 0 && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
+    startY = lastY = e.touches[0].clientY; lastT = Date.now(); vel = 0; dragging = false;
+  }, { passive: true });
+  sheetEl.addEventListener('touchmove', function (e) {
+    if (!armed) return;
+    var y = e.touches[0].clientY, dy = y - startY;
+    if (!dragging) {
+      if (dy > 6 && (body.scrollTop <= 0 || !body.contains(e.target))) { dragging = true; sheetEl.classList.add('dragging'); scrimEl.classList.add('dragging'); }
+      else if (dy < -6) { armed = false; return; }   // scrolling up: let the content scroll
+      else return;
+    }
+    e.preventDefault();   // stops Safari's pull-to-refresh
+    var now = Date.now(); vel = (y - lastY) / Math.max(1, now - lastT); lastY = y; lastT = now;
+    var d = Math.max(0, dy);
+    sheetEl.style.transform = 'translateY(' + d + 'px)';
+    scrimEl.style.opacity = String(Math.max(0, 1 - d / (sheetEl.offsetHeight || 600)));
+  }, { passive: false });
+  var end = function () {
+    if (!dragging) { armed = false; return; }
+    dragging = armed = false;
+    sheetEl.classList.remove('dragging'); scrimEl.classList.remove('dragging');
+    var d = lastY - startY;
+    if (d > Math.min(140, sheetEl.offsetHeight * 0.25) || vel > 0.6) {
+      if (isDirty() || (sheetState && sheetState.back)) { sheetEl.style.transform = ''; scrimEl.style.opacity = ''; requestClose(); }
+      else closeSheet();
+    } else { sheetEl.style.transform = ''; scrimEl.style.opacity = ''; }
+  };
+  sheetEl.addEventListener('touchend', end);
+  sheetEl.addEventListener('touchcancel', end);
+  // swiping on the dimmed background behind the sheet shouldn't refresh the page either
+  scrimEl.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+})();
+
+/* Press-and-hold (≈0.5 s) without moving. Ignores the WhatsApp / call / email buttons. */
+function onLongPress(el, fn) {
+  var t = null, x0 = 0, y0 = 0;
+  var cancel = function () { clearTimeout(t); t = null; el.classList.remove('holding'); };
+  var start = function (x, y, target) {
+    if (target.closest('.acts, a, button')) return;
+    x0 = x; y0 = y; el.classList.add('holding');
+    t = setTimeout(function () { t = null; el.classList.remove('holding'); el.dataset.fired = '1'; fn(); }, 500);
+  };
+  el.addEventListener('touchstart', function (e) { start(e.touches[0].clientX, e.touches[0].clientY, e.target); }, { passive: true });
+  el.addEventListener('touchmove', function (e) { if (t && (Math.abs(e.touches[0].clientX - x0) > 8 || Math.abs(e.touches[0].clientY - y0) > 8)) cancel(); }, { passive: true });
+  el.addEventListener('touchend', cancel); el.addEventListener('touchcancel', cancel);
+  el.addEventListener('mousedown', function (e) { if (e.button === 0) start(e.clientX, e.clientY, e.target); });
+  el.addEventListener('mouseup', cancel); el.addEventListener('mouseleave', cancel);
+  el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+}
+
+/* Edit one person right inside the deal: the row expands to reveal the boxes. */
+function expandPersonEdit(r, role, row) {
+  var open = document.querySelector('#sheetBody .pe-wrap');
+  if (open) { if (open.previousElementSibling === row) return; collapsePersonEdit(open); }
+  var isOwner = role === 'landlord';
+  var name = isOwner ? r.landlord : r.tenant, phone = r[role + 'Phone'] || '', email = r[role + 'Email'] || '';
+  var field = function (id, label, val, type, mode, ph) {
+    return '<div class="field"><label for="' + id + '">' + label + '</label><input id="' + id + '"' + (type ? ' type="' + type + '"' : '') + (mode ? ' inputmode="' + mode + '"' : '') +
+      ' placeholder="' + ph + '" value="' + esc(val) + '" autocomplete="off"></div>';
+  };
+  var wrap = document.createElement('div');
+  wrap.className = 'pe-wrap';
+  wrap.innerHTML = '<div class="pe-inner">' +
+    field('peName', 'Name', name, '', '', 'Name') +
+    (phone ? field('pePhone', 'Phone', phone, 'tel', 'tel', '012-345 6789') : '<button class="add-field" id="peAddPhone">+ Add phone</button>') +
+    (email ? field('peEmail', 'Email', email, 'email', 'email', 'name@email.com') : '<button class="add-field" id="peAddEmail">+ Add email</button>') +
+    '<div class="pe-btns"><button class="btn ghost" id="peCancel">Cancel</button><button class="btn primary" id="peSave">Save</button></div></div>';
+  row.classList.add('editing');
+  row.after(wrap);
+  // animate open to its natural height (force a layout pass so the change animates)
+  wrap.style.height = '0px';
+  void wrap.offsetHeight;
+  wrap.style.height = wrap.firstChild.scrollHeight + 'px';
+  setTimeout(function () { if (wrap.isConnected && wrap.style.height !== '0px') wrap.style.height = 'auto'; }, 300);
+  setTimeout(function () { wrap.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 300);
+
+  var addBox = function (btnId, id, label, type, mode, ph) {
+    bind(btnId, function () {
+      var b = document.getElementById(btnId), tmp = document.createElement('div');
+      tmp.innerHTML = field(id, label, '', type, mode, ph);
+      b.replaceWith(tmp.firstChild); document.getElementById(id).focus();
+    });
+  };
+  addBox('peAddPhone', 'pePhone', 'Phone', 'tel', 'tel', '012-345 6789');
+  addBox('peAddEmail', 'peEmail', 'Email', 'email', 'email', 'name@email.com');
+
+  // while open, closing the deal with changes asks first (uses the shared unsaved-changes prompt)
+  sheetState.guard = 'changes';
+  sheetState.snapshot = formSnapshot();
+  var doSave = function () {
+    var g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : null; };
+    var nn = g('peName'), np = g('pePhone'), ne = g('peEmail'), patch = {};
+    if (!nn) { toast('The name can’t be empty'); return; }
+    if (nn !== name) patch.parties = isOwner ? (r.tenant ? nn + '/' + r.tenant : nn) : (r.landlord || '') + '/' + nn;
+    if (np !== null && np !== phone) patch[role + 'Phone'] = np;
+    if (ne !== null && ne !== email) patch[role + 'Email'] = ne;
+    if (!Object.keys(patch).length) { collapsePersonEdit(wrap); return; }
+    var finish = function () {
+      save(r, patch, 'Saved ' + nn, true);
+      collapsePersonEdit(wrap, function () {
+        var top = document.getElementById('sheetBody').scrollTop;
+        openDetail(STATE.rows[r._i]);
+        document.getElementById('sheetBody').scrollTop = top;
+      });
+    };
+    // phone / email belong to the person: offer to update their other current deals too
+    var contactPatch = {};
+    if (patch[role + 'Phone'] !== undefined) contactPatch[role + 'Phone'] = patch[role + 'Phone'];
+    if (patch[role + 'Email'] !== undefined) contactPatch[role + 'Email'] = patch[role + 'Email'];
+    var others = Object.keys(contactPatch).length ? otherCurrentDeals(r, role, name) : [];
+    if (!others.length) { finish(); return; }
+    chooseOtherDeals(name, r, others, contactPatch).then(function (picked) {
+      if (picked === null) return;   // cancelled – keep editing
+      finish();
+      if (picked.length) {
+        picked.forEach(function (o) { applyLocal(o, contactPatch); });
+        renderCurrent();
+        api('updateMany', picked.map(function (o) { return { ref: refOf(o), patch: contactPatch }; }))
+          .then(function () { toast('Also updated on ' + picked.length + (picked.length === 1 ? ' other deal' : ' other deals')); afterSave(); })
+          .catch(function (e) { toast('Could not update the other deals: ' + e.message); load(true); });
+      }
+    });
+  };
+  sheetState.onRight = doSave;
+  bind('peSave', doSave);
+  bind('peCancel', function () { collapsePersonEdit(wrap); });
+  setTimeout(function () { var n = document.getElementById('peName'); if (n) n.focus({ preventScroll: true }); }, 290);
+}
+/* Other running leases where the same name appears in the same role. */
+function otherCurrentDeals(r, role, name) {
+  var key = nameTokens(name).join(' ');
+  if (!key) return [];
+  return STATE.rows.filter(function (o) {
+    return o !== r && o.isRental && (o.phase === 'active' || o.phase === 'moving') &&
+      nameTokens(role === 'landlord' ? o.landlord : o.tenant).join(' ') === key;
+  }).sort(function (a, b) { return (b.residence === r.residence) - (a.residence === r.residence) || a.end - b.end; });
+}
+/* Checklist: which other deals should get the new phone/email? Resolves with the picked deals, or null if cancelled. */
+function chooseOtherDeals(name, r, others, patch) {
+  return new Promise(function (resolve) {
+    var box = document.getElementById('waChoice'), scrim = document.getElementById('waScrim');
+    var what = Object.keys(patch).map(function (k) { return /Phone$/.test(k) ? 'number' : 'email'; }).join(' and ');
+    var picks = others.map(function (o) { return o.residence === r.residence; });
+    var render = function () {
+      var n = picks.filter(Boolean).length;
+      box.innerHTML = '<div class="box"><div class="ttl">Also update ' + esc(name) + '\u2019s ' + what + ' on:</div>' +
+        others.map(function (o, i) {
+          return '<label class="od-row"><input type="checkbox" data-od="' + i + '"' + (picks[i] ? ' checked' : '') + '><span><b>' + esc(o.residence + (o.unit ? ' ' + o.unit : '')) + '</b>' +
+            '<small>Ends ' + fmtDate(o.end) + (o.residence === r.residence ? ' · same building' : ' · different building – check it\u2019s the same person') + '</small></span></label>';
+        }).join('') +
+        '<button data-odgo="1" style="font-weight:700">' + (n ? 'Update ' + n + ' more' : 'Just this deal') + '</button>' +
+        (n ? '<button data-odgo="0">Just this deal</button>' : '') + '</div>' +
+        '<button class="cancel" data-odgo="-1">Keep editing</button>';
+    };
+    var done = function (v) { box.classList.remove('on'); scrim.classList.remove('on'); box.onclick = box.onchange = scrim.onclick = null; resolve(v); };
+    box.onchange = function (e) { var c = e.target.closest('[data-od]'); if (c) { picks[+c.getAttribute('data-od')] = c.checked; render(); } };
+    box.onclick = function (e) {
+      e.stopPropagation();
+      var b = e.target.closest('[data-odgo]'); if (!b) return;
+      var v = +b.getAttribute('data-odgo');
+      done(v < 0 ? null : v === 0 ? [] : others.filter(function (o, i) { return picks[i]; }));
+    };
+    scrim.onclick = function (e) { e.stopPropagation(); done(null); };
+    render(); box.classList.add('on'); scrim.classList.add('on');
+  });
+}
+function collapsePersonEdit(wrap, then) {
+  var row = wrap.previousElementSibling;
+  if (row) row.classList.remove('editing');
+  wrap.style.height = wrap.offsetHeight + 'px';
+  void wrap.offsetHeight;
+  wrap.style.height = '0px'; wrap.style.opacity = '0';
+  setTimeout(function () { wrap.remove(); if (then) then(); }, 260);
+  if (sheetState) { sheetState.guard = null; sheetState.snapshot = null; sheetState.onRight = null; }
+}
+
+/* Forms remember what they looked like when opened, so closing can warn about unsaved changes. */
+function formSnapshot() {
+  var body = document.getElementById('sheetBody');
+  var vals = [].map.call(body.querySelectorAll('input, textarea, select'), function (el) {
+    return el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value;
+  });
+  var segs = [].map.call(body.querySelectorAll('.seg .on'), function (b) { return b.getAttribute('data-v'); });
+  return JSON.stringify([vals, segs]);
+}
+function isDirty() { return !!(sheetState && sheetState.guard && sheetState.snapshot != null && formSnapshot() !== sheetState.snapshot); }
+function leaveSheet() { if (sheetState && sheetState.back) sheetState.back(); else closeSheet(); }
+function requestClose() {
+  if (!isDirty()) { leaveSheet(); return; }
+  var what = sheetState.guard;
+  actionSheet('You have unsaved changes', [
+    { label: 'Save ' + what, value: 'save', bold: true },
+    { label: 'Discard changes', value: 'discard', danger: true }
+  ], 'Keep editing').then(function (v) {
+    if (v === 'save' && sheetState && sheetState.onRight) sheetState.onRight();
+    else if (v === 'discard') leaveSheet();
+  });
+}
+/* iPhone-style action sheet. Resolves with the chosen value, or null for cancel. */
+function actionSheet(title, options, cancelLabel) {
+  return new Promise(function (resolve) {
+    var box = document.getElementById('waChoice'), scrim = document.getElementById('waScrim');
+    box.innerHTML = '<div class="box"><div class="ttl">' + esc(title) + '</div>' + options.map(function (o, i) {
+      return '<button data-as="' + i + '" style="' + (o.bold ? 'font-weight:700;' : '') + (o.danger ? 'color:var(--red);' : '') + '">' + esc(o.label) + '</button>';
+    }).join('') + '</div><button class="cancel" data-as="-1">' + esc(cancelLabel || 'Cancel') + '</button>';
+    var done = function (v) {
+      box.classList.remove('on'); scrim.classList.remove('on');
+      box.onclick = null; scrim.onclick = null; resolve(v);
+    };
+    box.onclick = function (e) {
+      var b = e.target.closest('[data-as]'); if (!b) return;
+      e.stopPropagation();
+      var i = +b.getAttribute('data-as'); done(i < 0 ? null : options[i].value);
+    };
+    scrim.onclick = function (e) { e.stopPropagation(); done(null); };
+    box.classList.add('on'); scrim.classList.add('on');
+  });
+}
+window.addEventListener('beforeunload', function (e) { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+function confirmBox(title, text, okLabel, danger) {
+  return new Promise(function (resolve) {
+    var d = document.getElementById('dialog'), s = document.getElementById('dialogScrim');
+    document.getElementById('dTitle').textContent = title;
+    document.getElementById('dText').textContent = text;
+    var ok = document.getElementById('dOk');
+    ok.textContent = okLabel || 'OK';
+    ok.className = danger ? 'danger' : '';
+    var done = function (v) { d.classList.remove('on'); s.classList.remove('on'); resolve(v); };
+    ok.onclick = function () { done(true); };
+    document.getElementById('dCancel').onclick = function () { done(false); };
+    s.onclick = function () { done(false); };
+    d.classList.add('on'); s.classList.add('on');
+  });
+}
+var toastTimer;
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2600);
+}
+
+/* ============================================================
+   Detail
+   ============================================================ */
+/* iPhone only lets a web page open WhatsApp through wa.me links; iOS decides
+   which WhatsApp app handles them (a "whatsapp-business://" link is rejected). */
+function waLink(digits) { return 'https://wa.me/' + digits; }
+
+var contactRowLease = null;   // the lease being shown, so its WhatsApp icons can offer the renewal message
+function contactRow(label, name, phone, email, role) {
+  var d = phoneDigits(phone);
+  var acts = '<div class="acts">' +
+    (d ? (contactRowLease && contactRowLease.isRental && (contactRowLease.phase === 'active' || contactRowLease.phase === 'moving')
+        ? '<button class="round wa" data-wachoice="' + contactRowLease._i + '|' + (role === 'landlord' ? 'owner' : 'tenant') + '" aria-label="WhatsApp ' + esc(name) + '">' + ICON.wa + '</button>'
+        : '<a class="round wa" href="' + waLink(d) + '" target="_blank" aria-label="WhatsApp ' + esc(name) + '">' + ICON.wa + '</a>') +
+      '<a class="round" href="tel:+' + d + '" aria-label="Call ' + esc(name) + '">' + ICON.phone + '</a>' : '') +
+    (email ? '<a class="round" href="mailto:' + esc(email) + '" aria-label="Email ' + esc(name) + '">' + ICON.mail + '</a>' : '') + '</div>';
+  var sub = [phone, email].filter(Boolean).map(esc).join('<br>');
+  var add = CONTACTS_ENABLED && !phone && name ? '<br><button class="inline-link" data-addcontact="' + role + '">' + ICON.contact + 'Add from contacts</button>' : '';
+  return '<div class="kv holdable" data-hold="' + role + '"><span class="k">' + label + '</span><span class="v">' + esc(name || '—') +
+    (sub ? '<br><span style="color:var(--muted);font-size:13.5px">' + sub + '</span>' : '') + add + '</span>' + acts + '</div>';
+}
+function openDetail(r) {
+  var a = attention(r);
+  var t = today();
+  var h = '<div class="hero"><div class="title">' + esc(r.residence) + (r.unit ? ' · ' + esc(r.unit) : '') + '</div>' +
+    '<div class="sub">' + (r.isSale ? 'Sale' : r.isRental ? 'Rental' : esc(r.type || 'Deal')) + (r.price != null ? ' · ' + money(r.price) + (r.isRental ? '/month' : '') : '') + '</div>';
+  if ((r.phase === 'active' || r.phase === 'moving') && r.daysLeft != null) {
+    h += '<div class="countdown num ' + (a.tone === 'red' ? 't-red' : a.tone === 'amber' ? 't-amber' : '') + '">' + r.daysLeft + '<small>days left</small></div>';
+  }
+  var showCount = (r.phase === 'active' || r.phase === 'moving') && r.daysLeft != null;
+  h += '<span class="pill ' + a.tone + '">' + esc(showCount && a.word ? a.word : a.pill) + '</span></div>';
+
+  if (r.start && r.end) {
+    var span = r.end - r.start || 1;
+    var pos = function (d) { return Math.min(100, Math.max(0, (d - r.start) / span * 100)).toFixed(1) + '%'; };
+    h += '<div class="timeline"><div style="font-size:13px;color:var(--muted);font-weight:600">LEASE · ' + esc(tenureLabel(r.months)) + '</div>' +
+      '<div class="tl-track"><div class="tl-fill" style="width:' + pos(t) + '"></div>' +
+      '<div class="tl-dot notice" style="left:' + pos(r.noticeDate) + '" title="Notice date"></div>' +
+      (t >= r.start && t <= r.end ? '<div class="tl-dot today" style="left:' + pos(t) + '" title="Today"></div>' : '') +
+      '</div><div class="tl-labels num"><div>Start<b>' + fmtShort(r.start) + '</b></div>' +
+      '<div>End<b>' + fmtShort(r.end) + '</b></div></div>' +
+      // notice label sits under its own dot, kept clear of the edges
+      '<div class="tl-notice num"><div style="left:clamp(48px,' + pos(r.noticeDate) + ',calc(100% - 48px))">Notice ' + fmtShort(r.noticeDate) + '</div></div>' +
+      '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">Notice is 2 months before the end – your reminder date.</div></div>';
+  }
+
+  if (a.hint) h += '<div class="card-hint t-' + (a.tone === 'accent' ? 'green' : a.tone) + '" style="margin:0 6px 14px">' + (ICON[a.icon] || '') + esc(a.hint) + '</div>';
+
+  contactRowLease = r;
+  h += '<div class="group">' + contactRow('Landlord', r.landlord, r.landlordPhone, r.landlordEmail, 'landlord') + contactRow(r.isSale ? 'Buyer' : 'Tenant', r.tenant, r.tenantPhone, r.tenantEmail, 'tenant') + '</div>' +
+    '<div class="hint" style="margin-top:-6px">Press and hold a name to edit it here.</div>';
+
+  h += '<div class="group">' +
+    '<div class="kv"><span class="k">Deal date</span><span class="v num">' + (r.date ? fmtDate(r.date) : esc(r.dateText || '—')) + '</span></div>' +
+    (r.status ? '<div class="kv"><span class="k">Status</span><span class="v">' + esc(r.status) + '</span></div>' : '') +
+    (r.remarks ? '<div class="kv"><span class="k">Remarks</span><span class="v">' + esc(r.remarks) + '</span></div>' : '') +
+    '</div>';
+
+  // renewal messages to owner and tenant
+  if (r.isRental && (r.phase === 'active' || r.phase === 'moving')) {
+    h += '<div class="group-label">Renewal messages</div><div class="group">' + ['owner', 'tenant'].map(function (role) {
+      var name = role === 'owner' ? r.landlord : r.tenant;
+      if (!name) return '';
+      var sent = msgSent(r, role), link = waMessageLink(r, role), key = r._i + '|' + role;
+      var status = sent ? 'Sent' + (sent instanceof Date ? ' ' + fmtDate(sent) : '') + ' · <button class="inline-link" style="margin:0" data-unsend="' + role + '">Undo</button>'
+        : STATE.opened[key] ? '<b>Sent it in WhatsApp?</b>' : (role === 'owner' ? 'Owner' : 'Tenant') + ' template' + (msgPhone(r, role) ? ' → ' + tail4(msgPhone(r, role)) : '');
+      var action = !link ? '<span class="l2">No number</span>'
+        : STATE.opened[key] && !sent ? '<span class="confirm"><button class="send-btn" data-confirm="' + key + '">Yes, sent</button><button class="send-btn ghost" data-notyet="' + key + '">Not yet</button></span>'
+        : '<a class="send-btn' + (sent ? ' ghost' : '') + '" href="' + link + '" target="_blank" data-wa="' + key + '">' + ICON.wa + (sent ? 'Open again' : 'Open') + '</a>';
+      return '<div class="msg-row"><div class="main"><div class="l1"><span class="role-chip ' + role + '">' + (role === 'owner' ? 'Owner' : 'Tenant') + '</span>' + esc(name) + '</div>' +
+        '<div class="l2">' + status + '</div>' + (sameNumber(r) ? '<div class="l2 t-amber">Same number as the ' + (role === 'owner' ? 'tenant' : 'owner') + '</div>' : '') + '</div>' + action + '</div>';
+    }).join('') + '</div>';
+  }
+
+  // commission – what she takes home from this case
+  var showFee2 = r.isRental && r.months >= 24;
+  h += '<div class="group-label">Commission</div><div class="group">' +
+    '<div class="field"><label for="cAmt">Amount</label><span class="prefix">RM</span><input id="cAmt" inputmode="decimal" placeholder="0" value="' + (r.fee != null ? esc(String(r.fee)) : '') + '">' +
+    '<button class="pick" id="cSave" style="display:none;width:auto;padding:0 12px;border-radius:999px;font-weight:700;font-size:14px">Save</button></div>' +
+    '<div class="kv toggle-row"><span>Collected' + (r.collectedOn ? '<br><span style="font-size:13px;color:var(--muted)">on ' + fmtDate(r.collectedOn) + '</span>' : '') + '</span><label class="switch"><input type="checkbox" id="tFee"' + (r.feeCollected ? ' checked' : '') + '><span></span></label></div>' +
+    (showFee2 ? '<div class="kv toggle-row"><span>2nd-year fee collected</span><label class="switch"><input type="checkbox" id="tFee2"' + (r.fee2Collected ? ' checked' : '') + '><span></span></label></div>' : '') +
+    '</div><div class="hint">Counts in the month you mark it collected (before that, in the deal month).</div>';
+
+  var live = r.phase === 'active' || r.phase === 'moving' || (r.phase === 'ended' && !r.outcome);
+  h += '<div class="actions">';
+  if (r.isRental && live && r.outcome !== 'renewed') {
+    h += '<button class="btn primary" id="aRenew">' + ICON.renew + 'Renew lease</button>';
+    if (r.phase !== 'moving') h += '<div class="actions two" style="margin:0"><button class="btn secondary" id="aMoving">' + ICON.out + 'Not renewing</button>' +
+      '<button class="btn secondary" id="aEarly">' + ICON.x + 'Early termination</button></div>';
+  }
+  h += '<div class="actions two" style="margin:0"><button class="btn secondary" id="aEdit">' + ICON.edit + 'Edit</button>' +
+    '<button class="btn secondary" id="aBuilding">Other deals here</button></div>';
+  if (!r.aborted) h += '<button class="btn danger" id="aAbort">' + ICON.x + 'Mark as aborted</button>';
+  if (STATE.sheetUrl) h += '<a class="btn ghost" href="' + esc(STATE.sheetUrl + '#gid=0&range=A' + r.row) + '" target="_blank">Open row ' + r.row + ' in Google Sheets ' + '</a>';
+  h += '</div>';
+
+  openSheet({
+    title: '', body: h,
+    onOpen: function () {
+      bind('aRenew', function () { openRenew(r); });
+      bind('aMoving', function () {
+        confirmBox('Tenant not renewing?', 'Marks this lease as "Expired" in the sheet and keeps a move-out reminder so you can find a new tenant.', 'Mark as expired').then(function (ok) {
+          if (ok) save(r, { status: 'Expired' }, 'Marked as not renewing');
+        });
+      });
+      bind('aEarly', function () {
+        confirmBox('Early termination?', 'Marks this lease as "Early termination" in the sheet. If the tenant leaves before ' + fmtDate(r.end) + ', edit the end date too.', 'Mark').then(function (ok) {
+          if (ok) save(r, { status: 'early termination' }, 'Marked as early termination');
+        });
+      });
+      bind('aEdit', function () { openForm(r); });
+      document.querySelectorAll('#sheetBody [data-hold]').forEach(function (row) {
+        onLongPress(row, function () { expandPersonEdit(r, row.getAttribute('data-hold'), row); });
+      });
+      document.querySelectorAll('[data-unsend]').forEach(function (b) {
+        b.onclick = function () {
+          var role = b.getAttribute('data-unsend'), patch = {};
+          patch[role === 'owner' ? 'ownerMsgSent' : 'tenantMsgSent'] = '';
+          save(r, patch, 'Marked as not sent');
+        };
+      });
+      document.querySelectorAll('[data-addcontact]').forEach(function (b) {
+        b.onclick = function () {
+          var role = b.getAttribute('data-addcontact');
+          var name = role === 'landlord' ? r.landlord : r.tenant;
+          openContactPicker(name, name, function (c) {
+            var patch = {};
+            var ph = bestPhone(c), em = (c.e || [])[0] || '';
+            if (ph) patch[role + 'Phone'] = ph;
+            if (em && !r[role + 'Email']) patch[role + 'Email'] = em;
+            if (!Object.keys(patch).length) { toast('That contact has no number or email'); return; }
+            save(r, patch, 'Saved ' + c.n + '\u2019s details');
+          });
+        };
+      });
+      bind('aBuilding', function () { closeSheet(); goSearch(r.residence); });
+      bind('aAbort', function () {
+        confirmBox('Mark as aborted?', 'The row turns red in the sheet, like your other aborted cases. Reminders for it are removed.', 'Mark aborted', true).then(function (ok) {
+          if (ok) save(r, { aborted: true, status: 'aborted' }, 'Marked as aborted');
+        });
+      });
+      var f1 = document.getElementById('tFee');
+      if (f1) f1.onchange = function () { save(r, { feeCollected: f1.checked ? dmy(today()) : 'No' }, f1.checked ? 'Commission collected ✓' : 'Marked not collected'); };
+      var amt = document.getElementById('cAmt'), cs = document.getElementById('cSave');
+      if (amt) {
+        amt.addEventListener('input', function () { cs.style.display = ''; });
+        var saveAmt = function () {
+          var v = amt.value.trim();
+          if (String(r.fee == null ? '' : r.fee) === v) { cs.style.display = 'none'; return; }
+          save(r, { commission: v }, v ? 'Commission saved' : 'Commission cleared', true);
+          cs.style.display = 'none';
+        };
+        cs.onclick = function (e) { e.preventDefault(); saveAmt(); };
+        amt.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); amt.blur(); saveAmt(); } });
+      }
+      var f2 = document.getElementById('tFee2');
+      if (f2) f2.onchange = function () { save(r, { fee2Collected: f2.checked ? 'Yes' : 'No' }, f2.checked ? '2nd-year fee collected ✓' : 'Marked unpaid', true); };
+    }
+  });
+}
+function bind(id, fn) { var el = document.getElementById(id); if (el) el.onclick = fn; }
+function refOf(r) { return { row: r.row, id: r.id, residence: r.raw.residence, parties: r.raw.parties, dupes: r.dupes || [] }; }
+
+/* Apply a change to the on-screen copy right away, so the app feels instant. */
+function applyLocal(r, patch) {
+  var raw = Object.assign({}, r.raw);
+  Object.keys(patch).forEach(function (k) {
+    var v = patch[k];
+    if (/^(date|start|end|notice)$/.test(k) && /^\d{4}-\d{2}-\d{2}$/.test(v)) v = dmy(parseDate(v));
+    if (k === 'price' && v !== '' && v != null) v = money(parseMoney(v)).replace(' ', '');
+    raw[k] = v;
+  });
+  var n = enrich(raw);
+  n._i = r._i; n.dupes = r.dupes;
+  STATE.rows[r._i] = n;
+  return n;
+}
+function afterSave() {
+  // calendar + fresh data from the sheet, in the background
+  api('syncCalendarIfOn').catch(function () {});
+  setTimeout(function () { load(true); }, 400);
+}
+function save(r, patch, msg, stayOpen) {
+  var n = applyLocal(r, patch);
+  if (!stayOpen) closeSheet();
+  renderCurrent();
+  toast(msg);
+  return api('updateRecord', refOf(r), patch).then(afterSave)
+    .catch(function (e) { toast('Could not save: ' + e.message); load(true); });
+}
+
+/* ============================================================
+   Add / Edit form
+   ============================================================ */
+function uniq(arr) { var s = {}; return arr.filter(function (x) { if (!x || s[x]) return false; s[x] = 1; return true; }); }
+
+function openForm(r, prefill) {
+  var editing = !!r;
+  var v = prefill || (r ? {
+    type: r.isSale ? 'S' : 'R', residence: r.raw.residence, unit: r.unit, price: r.price != null ? String(r.price) : '',
+    landlord: r.landlord, landlordPhone: r.landlordPhone, tenant: r.tenant, tenantPhone: r.tenantPhone,
+    landlordEmail: r.landlordEmail, tenantEmail: r.tenantEmail,
+    start: iso(r.start), months: r.months, date: iso(r.date), fee: r.fee != null ? String(r.fee) : '',
+    feeCollected: r.feeCollected, remarks: r.remarks
+  } : { type: 'R', months: 12, date: iso(today()), start: '', feeCollected: false });
+
+  var buildings = uniq(STATE.rows.slice().sort(function (a, b) { return b.sortDate - a.sortDate; }).map(function (x) { return x.raw.residence; }));
+  var landlords = uniq(STATE.rows.slice().sort(function (a, b) { return b.sortDate - a.sortDate; }).map(function (x) { return x.landlord; }));
+
+  var h = '<datalist id="dlB">' + buildings.map(function (b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist>' +
+    '<datalist id="dlL">' + landlords.map(function (b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist>';
+
+  h += '<div class="group"><div class="field block"><label>Deal type</label><div class="seg" id="fType">' +
+    '<button data-v="R" class="' + (v.type !== 'S' ? 'on' : '') + '">Rental</button><button data-v="S" class="' + (v.type === 'S' ? 'on' : '') + '">Sale</button></div></div></div>';
+
+  h += '<div class="group-label">Property</div><div class="group">' +
+    '<div class="field"><label for="fRes">Building</label><input id="fRes" list="dlB" placeholder="e.g. Solaris Dutamas" value="' + esc(v.residence || '') + '" autocomplete="off"></div>' +
+    '<div class="field"><label for="fUnit">Unit no.</label><input id="fUnit" placeholder="e.g. A-12-3" value="' + esc(v.unit || '') + '"></div>' +
+    '<div class="field"><label for="fPrice" id="fPriceLabel">' + (v.type === 'S' ? 'Price' : 'Rent / month') + '</label><span class="prefix">RM</span><input id="fPrice" inputmode="decimal" placeholder="0" value="' + esc(v.price || '') + '"></div>' +
+    '</div><div class="hint" id="fBldgHint"></div>';
+
+  h += '<div class="group-label">People</div><div class="group">' +
+    '<div class="field"><label for="fLand">Landlord</label><input id="fLand" placeholder="Name" value="' + esc(v.landlord || '') + '" autocomplete="off">' + (CONTACTS_ENABLED ? '<button class="pick" data-pickfor="land" aria-label="Choose landlord from contacts">' + ICON.contact + '</button>' : '') + '</div>' +
+    '<div class="auto-note" id="autoLand"></div><div class="sugg" id="suggLand"></div><div class="phone-chips" id="chipsLand"></div>' +
+    '<div class="field"><label for="fLandP">Phone</label><input id="fLandP" type="tel" inputmode="tel" placeholder="012-345 6789" value="' + esc(v.landlordPhone || '') + '"></div>' +
+    '<div class="field"><label for="fLandE">Email</label><input id="fLandE" type="email" inputmode="email" placeholder="Optional" value="' + esc(v.landlordEmail || '') + '"></div>' +
+    '</div><div class="group">' +
+    '<div class="field"><label for="fTen" id="fTenLabel">' + (v.type === 'S' ? 'Buyer' : 'Tenant') + '</label><input id="fTen" placeholder="Name" value="' + esc(v.tenant || '') + '" autocomplete="off">' + (CONTACTS_ENABLED ? '<button class="pick" data-pickfor="ten" aria-label="Choose tenant from contacts">' + ICON.contact + '</button>' : '') + '</div>' +
+    '<div class="auto-note" id="autoTen"></div><div class="sugg" id="suggTen"></div><div class="phone-chips" id="chipsTen"></div>' +
+    '<div class="field"><label for="fTenP">Phone</label><input id="fTenP" type="tel" inputmode="tel" placeholder="012-345 6789" value="' + esc(v.tenantPhone || '') + '"></div>' +
+    '<div class="field"><label for="fTenE">Email</label><input id="fTenE" type="email" inputmode="email" placeholder="Optional" value="' + esc(v.tenantEmail || '') + '"></div>' +
+    '</div>' +
+    (CONTACTS_ENABLED ? '<div class="hint" style="margin-top:8px">Type a full name: if it matches one contact, the number fills in by itself. If several match, pick from the list – or tap the <b>person icon</b>.</div>' : '');
+
+  h += '<div id="fLeaseBlock"' + (v.type === 'S' ? ' style="display:none"' : '') + '><div class="group-label">Lease</div><div class="group">' +
+    '<div class="field"><label for="fStart">Start date</label><input id="fStart" type="date" value="' + esc(v.start || '') + '"></div>' +
+    '<div class="field block"><label>Tenure</label><div class="seg" id="fTenure">' +
+    [[12, '1 year'], [24, '2 years'], [6, '6 months'], [0, 'Other']].map(function (o) {
+      var on = o[0] ? v.months === o[0] : [12, 24, 6].indexOf(v.months) < 0;
+      return '<button data-v="' + o[0] + '" class="' + (on ? 'on' : '') + '">' + o[1] + '</button>';
+    }).join('') + '</div></div>' +
+    '<div class="field" id="fMonthsRow" style="' + ([12, 24, 6].indexOf(v.months) >= 0 ? 'display:none' : '') + '"><label for="fMonths">Months</label><input id="fMonths" inputmode="numeric" value="' + esc(v.months || '') + '"></div>' +
+    '</div><div class="calc" id="fCalc"></div></div>';
+
+  h += '<div class="group-label">Deal</div><div class="group">' +
+    '<div class="field"><label for="fDate">Deal date</label><input id="fDate" type="date" value="' + esc(v.date || '') + '"></div>' +
+    '<div class="field"><label for="fFee">Commission</label><span class="prefix">RM</span><input id="fFee" inputmode="decimal" placeholder="0" value="' + esc(v.fee || '') + '"></div>' +
+    '<div class="field toggle-row"><label style="width:auto">Commission collected</label><label class="switch"><input type="checkbox" id="fFeeC"' + (v.feeCollected ? ' checked' : '') + '><span></span></label></div>' +
+    '<div class="field"><label for="fRem">Remarks</label><textarea id="fRem" placeholder="Optional">' + esc(v.remarks || '') + '</textarea></div>' +
+    '</div>';
+
+  openSheet({
+    title: editing ? 'Edit deal' : prefill && prefill._renewOf ? 'Renew lease' : 'New deal',
+    left: 'Cancel', right: 'Save', body: h,
+    onRight: function () { submitForm(r, prefill); },
+    guard: editing ? 'changes' : prefill && prefill._renewOf ? 'renewal' : 'deal',
+    onOpen: function () { wireForm(v); sheetState.snapshot = formSnapshot(); }
+  });
+}
+
+function formState() {
+  var g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var type = document.querySelector('#fType .on').getAttribute('data-v');
+  var tb = document.querySelector('#fTenure .on');
+  var months = tb && +tb.getAttribute('data-v') ? +tb.getAttribute('data-v') : parseInt(g('fMonths'), 10) || 0;
+  var start = g('fStart') ? parseDate(g('fStart')) : null;
+  var end = start && months ? addDays(addMonths(start, months), -1) : null;
+  return {
+    type: type, residence: g('fRes'), unit: g('fUnit'), price: g('fPrice'), landlord: g('fLand'), landlordPhone: g('fLandP'),
+    tenant: g('fTen'), tenantPhone: g('fTenP'), landlordEmail: g('fLandE'), tenantEmail: g('fTenE'), start: start, months: months, end: end, notice: end ? addMonths(end, -2) : null,
+    date: g('fDate') ? parseDate(g('fDate')) : null, fee: g('fFee'), feeCollected: document.getElementById('fFeeC').checked, remarks: g('fRem')
+  };
+}
+function wireForm(v) {
+  var seg = function (id, fn) {
+    document.querySelectorAll('#' + id + ' button').forEach(function (b) {
+      b.onclick = function (e) {
+        e.preventDefault();
+        document.querySelectorAll('#' + id + ' button').forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on'); fn(b.getAttribute('data-v')); update();
+      };
+    });
+  };
+  seg('fType', function (t) {
+    document.getElementById('fLeaseBlock').style.display = t === 'S' ? 'none' : '';
+    document.getElementById('fPriceLabel').textContent = t === 'S' ? 'Price' : 'Rent / month';
+    document.getElementById('fTenLabel').textContent = t === 'S' ? 'Buyer' : 'Tenant';
+  });
+  seg('fTenure', function (m) {
+    document.getElementById('fMonthsRow').style.display = +m ? 'none' : '';
+    if (!+m) document.getElementById('fMonths').focus();
+  });
+  ['fStart', 'fMonths', 'fRes', 'fPrice', 'fRes'].forEach(function (id) {
+    var el = document.getElementById(id); if (el) el.addEventListener('input', update);
+  });
+  if (CONTACTS_ENABLED) { wirePerson('Land'); wirePerson('Ten'); }
+  function update() {
+    var s = formState();
+    var calc = document.getElementById('fCalc');
+    if (s.type === 'R') {
+      calc.innerHTML = s.end
+        ? '<div><div class="k">Lease ends</div><div class="v num">' + fmtDate(s.end) + '</div></div><div><div class="k">Notice / reminder</div><div class="v num">' + fmtDate(s.notice) + '</div></div>'
+        : '<div style="grid-column:1/3;font-size:14px;color:var(--accent-text)">Pick a start date – the end date and the 2-month notice date are worked out for you.</div>';
+    }
+    var hint = document.getElementById('fBldgHint');
+    var b = STATE.rows.some(function (x) { return x.raw.residence === s.residence; }) ? buildingInfo(s.residence) : '';
+    hint.innerHTML = b ? '<b>' + esc(s.residence) + ':</b> ' + esc(b) : '';
+    hint.style.display = b ? '' : 'none';
+  }
+  update();
+}
+/* Contact suggestions under a name field ("Land" or "Ten"). */
+function fillPerson(key, c, keepName) {
+  if (!keepName) document.getElementById('f' + key).value = c.n;
+  document.getElementById('auto' + key).classList.remove('on');
+  var phones = (c.p || []);
+  var best = bestPhone(c);
+  document.getElementById('f' + key + 'P').value = best;
+  if ((c.e || [])[0]) document.getElementById('f' + key + 'E').value = c.e[0];
+  var chips = document.getElementById('chips' + key);
+  chips.innerHTML = phones.length > 1 ? phones.map(function (p) {
+    return '<button class="' + (p === best ? 'on' : '') + '" data-ph="' + esc(p) + '">' + esc(p) + '</button>';
+  }).join('') : '';
+  chips.querySelectorAll('button').forEach(function (b) {
+    b.onclick = function (e) {
+      e.preventDefault();
+      chips.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on'); document.getElementById('f' + key + 'P').value = b.getAttribute('data-ph');
+    };
+  });
+  document.getElementById('sugg' + key).classList.remove('on');
+}
+function wirePerson(key) {
+  var input = document.getElementById('f' + key), box = document.getElementById('sugg' + key);
+  var t;
+  ['P', 'E'].forEach(function (x) {
+    document.getElementById('f' + key + x).addEventListener('input', function () { this.dataset.auto = ''; document.getElementById('auto' + key).classList.remove('on'); });
+  });
+  // Typing a phone number finds the contact it belongs to.
+  var phoneEl = document.getElementById('f' + key + 'P'), pt;
+  phoneEl.addEventListener('focus', function () { loadContacts().catch(function () {}); });
+  phoneEl.addEventListener('input', function () {
+    clearTimeout(pt);
+    pt = setTimeout(function () {
+      if (!STATE.contacts) return;
+      var hits = contactsByPhone(phoneEl.value), auto = document.getElementById('auto' + key);
+      if (!hits.length) { box.classList.remove('on'); return; }
+      if (hits.length === 1) {
+        var c = hits[0];
+        if (!input.value.trim() || input.dataset.auto === '1') { input.value = c.n; input.dataset.auto = '1'; }
+        var em = document.getElementById('f' + key + 'E');
+        if (!em.value && (c.e || [])[0]) { em.value = c.e[0]; em.dataset.auto = '1'; }
+        auto.innerHTML = ICON.check + '<span>Number belongs to ' + esc(c.n) + '</span>';
+        auto.classList.add('on'); box.classList.remove('on');
+        return;
+      }
+      box.innerHTML = '<div class="note">This number is saved on ' + hits.length + ' contacts – which one?</div>' +
+        hits.map(function (c) { return contactRowHtml(c, 'data-sugg="' + STATE.contacts.indexOf(c) + '"'); }).join('');
+      box.classList.add('on');
+      box.querySelectorAll('[data-sugg]').forEach(function (b) {
+        b.onclick = function (e) {
+          e.preventDefault();
+          var c = STATE.contacts[+b.getAttribute('data-sugg')], typed = phoneEl.value;
+          fillPerson(key, c); phoneEl.value = typed;
+        };
+      });
+    }, 250);
+  });
+  input.addEventListener('input', function () { input.dataset.auto = ''; });
+  input.addEventListener('focus', function () { loadContacts().catch(function () {}); });
+  input.addEventListener('input', function () {
+    clearTimeout(t);
+    var q = input.value.trim();
+    if (q.length < 2) { box.classList.remove('on'); return; }
+    t = setTimeout(function () {
+      var show = function () {
+        var name = input.value.trim();
+        var auto = document.getElementById('auto' + key);
+        var phoneEl = document.getElementById('f' + key + 'P'), emailEl = document.getElementById('f' + key + 'E');
+        var one = clearMatch(name);
+        // only overwrite numbers we filled in ourselves, never ones she typed
+        var ours = !phoneEl.value || phoneEl.dataset.auto === '1';
+        if (one && ours) {
+          fillPerson(key, one, true);
+          phoneEl.dataset.auto = '1'; emailEl.dataset.auto = (one.e || []).length ? '1' : '';
+          auto.innerHTML = ICON.check + '<span>Filled from ' + esc(one.n) + '</span><button data-change="' + key + '">Change</button>';
+          auto.classList.add('on');
+          auto.querySelector('[data-change]').onclick = function (e) {
+            e.preventDefault();
+            openContactPicker(key === 'Land' ? 'Choose landlord' : 'Choose tenant', name, function (c) { fillPerson(key, c, true); phoneEl.dataset.auto = '1'; auto.innerHTML = ICON.check + '<span>Filled from ' + esc(c.n) + '</span>'; auto.classList.add('on'); });
+          };
+          box.classList.remove('on');
+          return;
+        }
+        if (!one && phoneEl.dataset.auto === '1') {
+          // name changed and no longer clearly matches – clear what we filled
+          phoneEl.value = ''; phoneEl.dataset.auto = '';
+          if (emailEl.dataset.auto === '1') { emailEl.value = ''; emailEl.dataset.auto = ''; }
+          document.getElementById('chips' + key).innerHTML = '';
+          auto.classList.remove('on');
+        }
+        var hits = findContacts(name, 4);
+        if (!hits.length) { box.classList.remove('on'); return; }
+        box.innerHTML = hits.map(function (x) { return contactRowHtml(x.c, 'data-sugg="' + STATE.contacts.indexOf(x.c) + '"'); }).join('');
+        box.classList.add('on');
+        box.querySelectorAll('[data-sugg]').forEach(function (b) {
+          b.onclick = function (e) { e.preventDefault(); fillPerson(key, STATE.contacts[+b.getAttribute('data-sugg')]); };
+        });
+      };
+      if (STATE.contacts) show();
+      else {
+        box.innerHTML = '<div class="note">Looking in your contacts…</div>'; box.classList.add('on');
+        loadContacts().then(show).catch(function (e) { box.innerHTML = '<div class="note t-red">Couldn\u2019t read your Google Contacts: ' + esc(e.message) + '</div>'; });
+      }
+    }, 150);
+  });
+  document.querySelector('[data-pickfor="' + key.toLowerCase() + '"]').onclick = function (e) {
+    e.preventDefault();
+    openContactPicker(key === 'Land' ? 'Choose landlord' : 'Choose tenant', input.value.trim(), function (c) { fillPerson(key, c); });
+  };
+}
+
+function submitForm(r, prefill) {
+  var s = formState();
+  if (!s.residence) { toast('Add the building name'); document.getElementById('fRes').focus(); return; }
+  if (!s.landlord && !s.tenant) { toast('Add the landlord or tenant'); document.getElementById('fLand').focus(); return; }
+  if (s.type === 'R' && !s.start) { toast('Pick the lease start date'); document.getElementById('fStart').focus(); return; }
+  if (s.type === 'R' && !s.months) { toast('How many months is the lease?'); return; }
+
+  var rec = {
+    residence: s.residence, unit: s.unit, type: s.type, price: s.price,
+    parties: s.tenant ? s.landlord + '/' + s.tenant : s.landlord,
+    landlordPhone: s.landlordPhone, tenantPhone: s.tenantPhone,
+    landlordEmail: s.landlordEmail, tenantEmail: s.tenantEmail,
+    date: s.date ? iso(s.date) : '', commission: s.fee, feeCollected: s.feeCollected ? (r && r.collectedOn ? dmy(r.collectedOn) : dmy(today())) : (s.fee ? 'No' : ''), remarks: s.remarks
+  };
+  if (s.type === 'R') {
+    rec.start = iso(s.start); rec.tenure = tenureCell(s.months); rec.end = iso(s.end); rec.notice = iso(s.notice);
+  }
+  var call;
+  if (prefill && prefill._renewOf) call = api('renewRecord', refOf(prefill._renewOf), rec);
+  else if (r) { applyLocal(r, rec); call = api('updateRecord', refOf(r), rec); }
+  else call = api('addRecord', rec);
+  closeSheet();
+  renderCurrent();
+  var done = prefill && prefill._renewOf ? 'Renewed – new term added' : r ? 'Changes saved' : 'Deal added';
+  toast(r ? done : 'Saving…');
+  call.then(function () { toast(done); afterSave(); })
+    .catch(function (e) { toast('Could not save: ' + e.message + ' – please try again'); load(true); });
+}
+
+function openRenew(r) {
+  var start = r.end ? addDays(r.end, 1) : today();
+  var months = r.months >= 12 ? (r.months % 12 === 0 ? r.months : 12) : r.months;
+  openForm(null, {
+    _renewOf: r, type: 'R', residence: r.raw.residence, unit: r.unit, price: r.price != null ? String(r.price) : '',
+    landlord: r.landlord, landlordPhone: r.landlordPhone, tenant: r.tenant, tenantPhone: r.tenantPhone,
+    landlordEmail: r.landlordEmail, tenantEmail: r.tenantEmail,
+    start: iso(start), months: months, date: iso(today()), fee: '', feeCollected: false, remarks: ''
+  });
+  // quick rent bump chips under the rent field
+  var priceField = document.getElementById('fPrice').closest('.field');
+  var base = r.price;
+  if (base) {
+    var q = document.createElement('div'); q.className = 'quick';
+    q.innerHTML = [0, 5, 10].map(function (p) { return '<button data-p="' + p + '">' + (p ? '+' + p + '%' : 'Same rent') + '</button>'; }).join('');
+    priceField.after(q);
+    q.querySelectorAll('button').forEach(function (b) {
+      b.onclick = function () {
+        var p = +b.getAttribute('data-p');
+        var val = Math.round(base * (1 + p / 100) / 10) * 10;
+        document.getElementById('fPrice').value = String(val);
+        document.getElementById('fPrice').dispatchEvent(new Event('input'));
+      };
+    });
+  }
+}
+
+/* ============================================================
+   Match contacts – suggest phone numbers for active leases.
+   Nothing is saved until she confirms.
+   ============================================================ */
+function leasesMissingContacts() {
+  return STATE.rows.filter(function (r) {
+    return r.isRental && (r.phase === 'active' || r.phase === 'moving') &&
+      ((r.landlord && !r.landlordPhone) || (r.tenant && !r.tenantPhone));
+  });
+}
+function openMatcher() {
+  openSheet({ title: 'Fill from contacts', left: 'Close', right: '', body: '<div class="empty">Reading your contacts…</div>' });
+  loadContacts().then(function () {
+    // one decision per person name, applied to all their leases
+    var people = {};
+    leasesMissingContacts().forEach(function (r) {
+      [['landlord', 'Landlord'], ['tenant', 'Tenant']].forEach(function (x) {
+        var role = x[0], name = r[role];
+        if (!name || r[role + 'Phone']) return;
+        var k = nameTokens(name).join(' ');
+        if (!k) return;
+        if (!people[k]) people[k] = { name: name, roles: {}, leases: [] };
+        people[k].roles[x[1]] = 1;
+        people[k].leases.push({ r: r, role: role });
+      });
+    });
+    var all = Object.keys(people).map(function (k) { return people[k]; });
+    var clear = [], ask = [], none = 0;
+    all.forEach(function (g) {
+      var one = clearMatch(g.name);
+      if (one) { g.contact = one; clear.push(g); return; }
+      g.cands = findContacts(g.name, 3);
+      g.pick = -1;
+      if (g.cands.length) ask.push(g); else none++;
+    });
+    ask.sort(function (a, b) { return b.leases.length - a.leases.length; });
+    STATE.match = { done: clear, ask: ask, none: none };
+    if (!clear.length) { renderMatcher(); return; }
+    renderMatcher('Filling ' + clear.length + (clear.length === 1 ? ' person' : ' people') + '…');
+    api('updateMany', patchesFor(clear)).then(function () {
+      clear.forEach(function (g) { g.saved = true; });
+      api('syncCalendarIfOn').catch(function () {});
+      toast('Filled ' + clear.length + (clear.length === 1 ? ' person' : ' people') + ' automatically');
+      renderMatcher();
+      load(true);
+    }).catch(function (e) { renderMatcher(); toast('Could not save: ' + e.message); });
+  }).catch(function (e) {
+    document.getElementById('sheetBody').innerHTML = empty('⚠️', 'Could not read contacts', e.message);
+  });
+}
+/* Sheet patches for people -> contacts (blank=true clears them again, for Undo). */
+function patchesFor(groups, blank) {
+  var byLease = {};
+  groups.forEach(function (g) {
+    var c = g.contact, ph = blank ? '' : bestPhone(c), em = blank ? '' : (c.e || [])[0] || '';
+    g.leases.forEach(function (l) {
+      var e = byLease[l.r._i] || (byLease[l.r._i] = { ref: refOf(l.r), patch: {} });
+      e.patch[l.role + 'Phone'] = ph;
+      if (blank ? g.setEmail : (em && !l.r[l.role + 'Email'])) { e.patch[l.role + 'Email'] = em; g.setEmail = !blank; }
+    });
+  });
+  return Object.keys(byLease).map(function (k) { return byLease[k]; });
+}
+function whereText(g) {
+  var where = g.leases.map(function (l) { return l.r.residence + (l.r.unit ? ' ' + l.r.unit : ''); });
+  return Object.keys(g.roles).join(' & ') + ' · ' + where.slice(0, 2).join(', ') + (where.length > 2 ? ' +' + (where.length - 2) : '');
+}
+function renderMatcher(busy) {
+  var m = STATE.match, h = '';
+  if (!m.done.length && !m.ask.length) {
+    h = empty('📇', 'Nothing to fill', m.none ? m.none + (m.none === 1 ? ' name doesn’t' : ' names don’t') + ' match any contact – add those with Edit.' : 'Every active lease already has phone numbers.');
+  }
+  if (m.done.length) {
+    h += '<div class="group-label" style="margin-top:4px">' + (busy ? busy : 'Filled automatically') + '</div><div class="match-card">' +
+      m.done.map(function (g, i) {
+        return '<div class="done-row' + (g.undone ? ' undone' : '') + '"><span class="cav">' + esc(initials(g.contact.n)) + '</span><span class="cmain"><b>' + esc(g.name) + ' → ' + esc(g.contact.n) + '</b><span>' + esc(bestPhone(g.contact) + ' · ' + whereText(g)) + '</span></span>' +
+          (busy ? '' : '<button class="undo" data-undo="' + i + '">' + (g.undone ? 'Undone' : 'Undo') + '</button>') + '</div>';
+      }).join('') + '</div>';
+  }
+  if (m.ask.length) {
+    h += '<div class="group-label">Which one? (' + m.ask.length + ')</div><div class="hint" style="margin:0 6px 12px">These names match more than one contact. Pick the right person, then tap <b>Save</b>.</div>';
+    h += m.ask.map(function (g, gi) {
+      return '<div class="match-card"><div class="mh"><b>' + esc(g.name) + '</b><span>' + esc(whereText(g)) + '</span></div>' +
+        g.cands.map(function (x, ci) {
+          return '<button class="mopt' + (g.pick === ci ? ' on' : '') + '" data-mg="' + gi + '" data-mc="' + ci + '"><span class="radio"></span><span class="cav">' + esc(initials(x.c.n)) + '</span><span class="cmain"><b>' + esc(x.c.n) + '</b><span>' + esc(contactLine(x.c)) + '</span></span></button>';
+        }).join('') +
+        '<button class="mopt" data-more="' + gi + '"><span class="radio" style="border-style:dashed"></span><span class="skip">Someone else… (search contacts)</span></button>' +
+        '<button class="mopt' + (g.pick === -1 ? ' on' : '') + '" data-mg="' + gi + '" data-mc="-1"><span class="radio"></span><span class="skip">Skip for now</span></button></div>';
+    }).join('');
+  }
+  if (m.none && (m.done.length || m.ask.length)) h += '<div class="hint" style="margin:6px 6px 0">' + m.none + (m.none === 1 ? ' name doesn’t' : ' names don’t') + ' match any contact – add those with Edit.</div>';
+  var body = document.getElementById('sheetBody'), top = body.scrollTop;
+  body.innerHTML = h; body.scrollTop = top;
+
+  var chosen = m.ask.filter(function (g) { return g.pick >= 0; }).length;
+  var right = document.getElementById('sheetRight');
+  right.textContent = chosen ? 'Save ' + chosen : '';
+  right.style.visibility = chosen ? 'visible' : 'hidden';
+  right.disabled = false;
+  sheetState.onRight = saveMatches;
+  body.querySelectorAll('[data-mg]').forEach(function (b) {
+    b.onclick = function () { m.ask[+b.getAttribute('data-mg')].pick = +b.getAttribute('data-mc'); renderMatcher(); };
+  });
+  body.querySelectorAll('[data-more]').forEach(function (b) {
+    b.onclick = function () {
+      var g = m.ask[+b.getAttribute('data-more')];
+      openContactPicker('Contact for ' + g.name, g.name.split(' ')[0], function (c) {
+        if (!g.cands.some(function (x) { return x.c === c; })) g.cands.unshift({ c: c, s: 0 });
+        g.pick = g.cands.map(function (x) { return x.c; }).indexOf(c);
+        renderMatcher();
+      });
+    };
+  });
+  body.querySelectorAll('[data-undo]').forEach(function (b) {
+    b.onclick = function () {
+      var g = m.done[+b.getAttribute('data-undo')];
+      if (g.undone) return;
+      b.textContent = '…';
+      api('updateMany', patchesFor([g], true)).then(function () { g.undone = true; renderMatcher(); toast('Removed ' + g.name + '’s number'); load(true); })
+        .catch(function (e) { toast('Could not undo: ' + e.message); renderMatcher(); });
+    };
+  });
+}
+function saveMatches() {
+  var picked = STATE.match.ask.filter(function (g) { return g.pick >= 0; });
+  if (!picked.length) return;
+  picked.forEach(function (g) { g.contact = g.cands[g.pick].c; });
+  document.getElementById('sheetRight').disabled = true;
+  toast('Saving…');
+  api('updateMany', patchesFor(picked)).then(function (res) {
+    STATE.match.ask = STATE.match.ask.filter(function (g) { return g.pick < 0; });
+    picked.forEach(function (g) { g.saved = true; STATE.match.done.push(g); });
+    toast('Saved ' + picked.length + (picked.length === 1 ? ' person' : ' people'));
+    renderMatcher(); load(true);
+  }).catch(function (e) { document.getElementById('sheetRight').disabled = false; toast('Could not save: ' + e.message); });
+}
+
+/* ============================================================
+   Settings
+   ============================================================ */
+function openSettings() {
+  var s = STATE.settings || {};
+  var last = s.lastSync ? new Date(s.lastSync) : null;
+  var h = '<div class="group-label">Reminders</div><div class="group">' +
+    '<div class="kv toggle-row"><span>Calendar reminders</span><label class="switch"><input type="checkbox" id="sCal"' + (s.calendar ? ' checked' : '') + '><span></span></label></div>' +
+    '<div class="kv toggle-row"><span>Monday email summary</span><label class="switch"><input type="checkbox" id="sMail"' + (s.weeklyEmail ? ' checked' : '') + '><span></span></label></div>' +
+    '</div>' +
+    '<div class="settings-note">Calendar reminders go to a calendar called <b>Tenancy Reminders</b> in your Google Calendar, at 9am:' +
+    '<ol><li>3 months before a lease ends – start renewal talk</li><li>2 months before – notice deadline</li><li>1 week before – lease ends</li><li>12 months into a 2-year lease – collect 2nd-year fee</li></ol>' +
+    '<p style="margin:8px 0 0">They pop up on your iPhone once your Google account is added in <b>Settings › Calendar › Accounts</b>. Changes you make in the sheet are picked up every morning.</p></div>' +
+    '<div class="actions"><button class="btn secondary" id="sSync">' + ICON.renew + 'Sync calendar now</button></div>' +
+    '<div class="settings-note" style="text-align:center">' + (last ? 'Last synced ' + fmtDate(last) + ', ' + last.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Not synced yet') + '</div>' +
+    (CONTACTS_ENABLED ? '<div class="group-label">Contacts</div>' +
+    '<div class="settings-note" style="margin:0 6px 10px" id="cStatus">' + (STATE.contacts ? STATE.contacts.length + ' Google Contacts loaded' : STATE.contactsError ? '<span class="t-red">Couldn\u2019t read Google Contacts: ' + esc(STATE.contactsError) + '</span>' : 'Loading Google Contacts…') + '</div>' +
+    '<div class="actions" style="margin-top:0"><button class="btn secondary" id="sMatch">' + ICON.contact + 'Fill phone numbers from contacts</button></div>' : '') +
+    '<div class="group-label">Messages</div><div class="actions" style="margin-top:0"><button class="btn secondary" id="sTpl">' + ICON.wa + 'Message templates</button></div>' +
+    '<div class="group-label">Data</div><div class="group">' +
+    '<div class="kv"><span class="k">Records</span><span class="v num">' + STATE.rows.length + '</span></div>' +
+    (STATE.sheetUrl ? '<a class="kv" href="' + esc(STATE.sheetUrl) + '" target="_blank" style="color:var(--accent-text)">Open the Google Sheet<span style="flex:1"></span>' + '<span style="width:18px;height:18px;display:inline-block">' + ICON.ext + '</span></a>' : '') +
+    '</div>';
+  openSheet({
+    title: 'Settings', left: 'Done', body: h,
+    onOpen: function () {
+      var cal = document.getElementById('sCal'), mail = document.getElementById('sMail');
+      var push = function (msg) {
+        toast('Saving…');
+        api('saveSettings', { calendar: cal.checked, weeklyEmail: mail.checked }).then(function (st) {
+          STATE.settings = st; toast(msg); renderCurrent();
+        }).catch(function (e) { toast('Could not save: ' + e.message); });
+      };
+      cal.onchange = function () { push(cal.checked ? 'Calendar reminders on' : 'Calendar reminders off'); };
+      mail.onchange = function () { push(mail.checked ? 'Weekly email on' : 'Weekly email off'); };
+      bind('sMatch', openMatcher);
+      bind('sTpl', openTemplates);
+      bind('sSync', function () {
+        if (!cal.checked) { toast('Turn on calendar reminders first'); return; }
+        toast('Syncing…');
+        api('syncCalendar').then(function (st) { STATE.settings = st; toast('Calendar up to date'); renderCurrent(); })
+          .catch(function (e) { toast('Sync failed: ' + e.message); });
+      });
+    }
+  });
+}
+
+function openTemplates() {
+  var t = templates();
+  var box = function (role, label) {
+    return '<div class="group-label">' + label + '</div><div class="group"><textarea class="tpl" id="tpl_' + role + '">' + esc(t[role]) + '</textarea>' +
+      '<div class="ph">' + ['name', 'building', 'unit', 'end', 'notice', 'rent'].map(function (k) { return '<button data-ph="' + role + '" data-k="' + k + '">+ {' + k + '}</button>'; }).join('') + '</div></div>';
+  };
+  openSheet({
+    title: 'Message templates', left: 'Cancel', right: 'Save', guard: 'templates',
+    body: '<div class="hint" style="margin:0 6px 4px">{name} becomes the owner\u2019s or tenant\u2019s name from your sheet. {end} is the lease end date, {notice} the notice date.</div>' +
+      box('owner', 'To owner') + box('tenant', 'To tenant') +
+      '<div class="actions"><button class="btn ghost" id="tplReset">Reset to original wording</button></div>',
+    onOpen: function () {
+      document.querySelectorAll('[data-ph]').forEach(function (b) {
+        b.onclick = function () {
+          var ta = document.getElementById('tpl_' + b.getAttribute('data-ph')), ins = '{' + b.getAttribute('data-k') + '}';
+          var p = ta.selectionStart || ta.value.length;
+          ta.value = ta.value.slice(0, p) + ins + ta.value.slice(ta.selectionEnd || p); ta.focus();
+        };
+      });
+      sheetState.snapshot = formSnapshot();
+      bind('tplReset', function () {
+        document.getElementById('tpl_owner').value = DEFAULT_TEMPLATES.owner;
+        document.getElementById('tpl_tenant').value = DEFAULT_TEMPLATES.tenant;
+      });
+    },
+    onRight: function () {
+      var nt = { owner: document.getElementById('tpl_owner').value.trim(), tenant: document.getElementById('tpl_tenant').value.trim() };
+      var isDefault = nt.owner === DEFAULT_TEMPLATES.owner && nt.tenant === DEFAULT_TEMPLATES.tenant;
+      STATE.settings.templates = isDefault ? null : nt;
+      closeSheet(); renderCurrent(); toast('Templates saved');
+      api('saveTemplates', isDefault ? null : nt).then(function (st) { STATE.settings = st; })
+        .catch(function (e) { toast('Could not save templates: ' + e.message); });
+    }
+  });
+}
+
+/* ============================================================
+   Navigation & loading
+   ============================================================ */
+function setTab(t) {
+  if (t === 'sheet') { if (STATE.sheetUrl) window.open(STATE.sheetUrl, '_blank'); return; }
+  STATE.tab = t;
+  document.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === t); });
+  document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('active', v.id === 'view-' + t); });
+  window.scrollTo(0, 0);
+  renderCurrent();
+}
+function renderCurrent() {
+  if (!STATE.loaded) return;
+  if (STATE.tab === 'today') { renderToday(); if (document.getElementById('hq').value.trim()) renderHomeSearch(); }
+  if (STATE.tab === 'list') renderList();
+  if (STATE.tab === 'insights') renderInsights();
+  if (STATE.tab === 'notes') renderNotes();
+}
+function goSearch(q, filter) {
+  STATE.q = q || ''; STATE.filter = filter || (q ? 'all' : 'active'); STATE.limit = 60;
+  document.getElementById('q').value = STATE.q;
+  setTab('list');
+}
+
+var loading = false;
+function load(quiet) {
+  if (loading) return Promise.resolve();
+  loading = true;
+  var rb = document.getElementById('refreshBtn'); rb.classList.add('spin');
+  return api('getData').then(function (d) {
+    STATE.rows = dedupe(d.rows.map(enrich));
+    STATE.rows.forEach(function (r, i) { r._i = i; });
+    STATE.settings = d.settings || {};
+    STATE.sheetUrl = d.sheetUrl || '';
+    STATE.loaded = true;
+    STATE.lastLoad = Date.now();
+    renderCurrent();
+    if (CONTACTS_ENABLED && !STATE.contacts && !contactsPromise) setTimeout(function () { loadContacts().catch(function () {}); }, 300);
+  }).catch(function (e) {
+    document.getElementById('todayBody').innerHTML = empty('⚠️', 'Could not load the sheet', e.message + ' – tap refresh to try again.');
+  }).then(function () { loading = false; rb.classList.remove('spin'); });
+}
+
+document.addEventListener('click', function (e) {
+  var wc = e.target.closest('[data-wachoice]');
+  if (wc) { openWaChoice(wc.getAttribute('data-wachoice')); return; }
+  if (e.target.closest('#waScrim') || e.target.closest('#waCancel')) { closeWaChoice(); return; }
+  if (e.target.closest('#waChoice a')) {
+    var ak = e.target.closest('#waChoice a').getAttribute('data-wa');
+    closeWaChoice();
+    if (ak) setTimeout(function () { STATE.opened[ak] = true; refreshMsgViews(ak); }, 400);
+    return;
+  }
+  // "Open": WhatsApp opens with the text typed in – nothing is sent or recorded yet.
+  var wa = e.target.closest('[data-wa]');
+  if (wa) {
+    var wk = wa.getAttribute('data-wa');
+    setTimeout(function () { STATE.opened[wk] = true; refreshMsgViews(wk); }, 400);
+    return;
+  }
+  var cf = e.target.closest('[data-confirm]') || e.target.closest('[data-notyet]');
+  if (cf) {
+    var ck = cf.getAttribute('data-confirm') || cf.getAttribute('data-notyet');
+    var parts = ck.split('|'), cr = STATE.rows[+parts[0]];
+    delete STATE.opened[ck];
+    if (cf.hasAttribute('data-confirm')) { markSent(cr, parts[1]); }
+    refreshMsgViews(ck);
+    return;
+  }
+  var o = e.target.closest('[data-open]');
+  if (o) { openDetail(STATE.rows[+o.getAttribute('data-open')]); return; }
+  var j = e.target.closest('[data-jump]');
+  if (j) { goSearch('', j.getAttribute('data-jump')); return; }
+  var nf = e.target.closest('[data-nfilter]');
+  if (nf) { STATE.noteFilter = nf.getAttribute('data-nfilter'); renderNotes(); return; }
+  var f = e.target.closest('[data-filter]');
+  if (f) { STATE.filter = f.getAttribute('data-filter'); STATE.limit = 60; renderList(); return; }
+  var mk = e.target.closest('[data-month]');
+  if (mk) { STATE.incomeMonth = +mk.getAttribute('data-month'); var y = window.scrollY; renderInsights(); window.scrollTo(0, y); return; }
+  var b = e.target.closest('[data-building]');
+  if (b) { goSearch(b.getAttribute('data-building')); return; }
+  var tb = e.target.closest('[data-tab]');
+  if (tb) { setTab(tb.getAttribute('data-tab')); return; }
+  var c = e.target.closest('.col');
+  if (c) { var sib = c.parentNode.querySelectorAll('.col'); sib.forEach(function (x) { x.classList.remove('sel'); }); c.classList.add('sel', 'show'); return; }
+  if (e.target.id === 'showMore') { STATE.limit += 60; renderList(); }
+});
+document.getElementById('pickerCancel').onclick = closePicker;
+document.getElementById('pq').addEventListener('input', function () { if (STATE.contacts) renderPicker(); });
+document.getElementById('pickerList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-pick]'); if (!b) return;
+  var c = STATE.contacts[+b.getAttribute('data-pick')], cb = pickerCb;
+  closePicker(); if (cb) cb(c);
+});
+document.getElementById('addBtn').onclick = function () { openForm(null); };
+document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('refreshBtn').onclick = function () { load(); };
+document.getElementById('nq').addEventListener('input', function () {
+  STATE.nq = this.value; clearTimeout(qTimer); qTimer = setTimeout(renderNotes, 120);
+});
+var qTimer;
+document.getElementById('q').addEventListener('input', function () {
+  var v = this.value;
+  clearTimeout(qTimer);
+  qTimer = setTimeout(function () {
+    var had = !!STATE.q.trim();
+    STATE.q = v; STATE.limit = 60;
+    if (v.trim() && !had && STATE.filter === 'active') STATE.filter = 'all';
+    if (!v.trim() && had) STATE.filter = 'active';
+    renderList();
+  }, 120);
+});
+document.getElementById('qClear').onclick = function () { document.getElementById('q').value = ''; STATE.q = ''; STATE.filter = 'active'; renderList(); };
+// Pick up edits made directly in the sheet when she comes back to the app.
+document.addEventListener('visibilitychange', function () {
+  if (!document.hidden && STATE.loaded && Date.now() - STATE.lastLoad > 30000 && !sheetState) load(true);
+});
+
+load();
+</script>
+</body>
+</html>
