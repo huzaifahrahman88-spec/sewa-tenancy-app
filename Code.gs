@@ -19,35 +19,45 @@ var CALENDAR_NAME = 'Tenancy Reminders';
 var REMINDER_HOUR = 9;                // calendar alerts pop up at 9am
 var ABORTED_BG = '#ea4335';           // red fill she uses for aborted deals
 
-// Her existing headers, matched by name (case/spacing-insensitive).
-var COLS = {
-  residence: 'Residence',
-  date: 'Date',
-  type: 'R',
-  price: 'Price',
-  commission: 'Commission',
-  parties: 'Landlord/Client',
-  start: 'Start Date',
-  tenure: 'Tenure',
-  end: 'End Date',
-  notice: 'Notice',
-  status: 'Further Notice/Status',
-  remarks: 'Remarks, if any'
-};
+// ---- Sheet layout ------------------------------------------------------------
+// Row 1 of the sheet holds the column headers. The app finds each column by its
+// header text (not by letter), so columns can be moved around freely.
+// Matching ignores upper/lower case and extra spaces.
+//
+// To use your own sheet: change the text on the RIGHT to match your headers.
+// Keep the names on the LEFT as they are (the app uses them internally).
 
-// Columns the app adds at the far right, created on first use.
+// Columns that already exist in the sheet.
+var COLS = {
+  residence:  'Residence',              // building / property name, e.g. "Regalia"
+  date:       'Date',                   // date the deal was made
+  type:       'R',                      // "R" = rental. Other values (e.g. sale) are not tracked for renewal
+  price:      'Price',                  // monthly rent or sale price (RM)
+  commission: 'Commission',             // agent's commission for this deal (RM), used for income by month
+  parties:    'Landlord/Client',        // names, written "Landlord/Tenant", e.g. "Mr Lee/Aisyah"
+  start:      'Start Date',             // tenancy start date
+  tenure:     'Tenure',                 // length of tenancy, e.g. "1 year", "2 years"
+  end:        'End Date',               // tenancy end date - reminders count down to this
+  notice:     'Notice',                 // notice date (normally 2 months before End Date)
+  status:     'Further Notice/Status',  // e.g. "Renewed", "Expired" (= did not renew), "Early termination"
+  remarks:    'Remarks, if any'         // free-text notes
+};
+// Other sheet conventions the app understands:
+//   - A row filled red (ABORTED_BG above) = aborted deal, hidden from reminders.
+
+// Columns the app adds at the far right of the sheet the first time it needs them.
 var EXTRA_HEADERS = {
-  unit: 'Unit No.',
-  landlordPhone: 'Landlord Phone',
-  tenantPhone: 'Tenant Phone',
-  landlordEmail: 'Landlord Email',
-  tenantEmail: 'Tenant Email',
-  fee: 'Fee (RM)',
-  feeCollected: 'Fee Collected',
-  fee2Collected: '2nd Year Fee Collected',
-  ownerMsgSent: 'Owner Msg Sent',
-  tenantMsgSent: 'Tenant Msg Sent',
-  id: 'App ID'
+  unit:          'Unit No.',                // unit number, e.g. "A-12-3"
+  landlordPhone: 'Landlord Phone',          // landlord's phone number, e.g. "012-345 6789"
+  tenantPhone:   'Tenant Phone',            // tenant's phone number
+  landlordEmail: 'Landlord Email',          // landlord's email
+  tenantEmail:   'Tenant Email',            // tenant's email
+  fee:           'Fee (RM)',                // agent fee for this deal (RM)
+  feeCollected:  'Fee Collected',           // date the fee was collected (blank = not yet)
+  fee2Collected: '2nd Year Fee Collected',  // date the 2nd-year fee was collected (2-year leases)
+  ownerMsgSent:  'Owner Msg Sent',          // date the renewal WhatsApp went to the landlord
+  tenantMsgSent: 'Tenant Msg Sent',         // date the renewal WhatsApp went to the tenant
+  id:            'App ID'                   // the app's own ID for the row - don't edit
 };
 
 // ---- Web app entry point ---------------------------------------------------
